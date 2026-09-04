@@ -1,0 +1,7 @@
+---
+- name: Configure system manager
+  hosts: app
+  become: true
+
+  roles:
+    - system-manager

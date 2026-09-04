@@ -1,0 +1,16 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: true
+  become: true
+
+- name: Install required software
+  apt:
+    name: "{{ packages }}"
+    state: absent
+  register: package_install_result
+  become: true 
+
+- name: Display package install
+  debug:
+    var: packages

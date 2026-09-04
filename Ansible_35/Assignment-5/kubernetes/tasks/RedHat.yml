@@ -1,0 +1,35 @@
+---
+# ---------------------------------------------------------
+# Kubernetes package installation - RedHat
+# ---------------------------------------------------------
+
+- name: Install required dependencies
+  ansible.builtin.dnf:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+
+- name: Add Kubernetes repository
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes Repository
+    baseurl: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version.split('.')[0] }}.{{ kubernetes_version.split('.')[1] }}/rpm/"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version.split('.')[0] }}.{{ kubernetes_version.split('.')[1] }}/rpm/repodata/repomd.xml.key"
+
+- name: Install Kubernetes packages
+  ansible.builtin.dnf:
+    name:
+      - "kubelet-{{ kubernetes_version }}"
+      - "kubeadm-{{ kubernetes_version }}"
+      - "kubectl-{{ kubernetes_version }}"
+    state: present
+
+- name: Hold Kubernetes packages
+  ansible.builtin.command:
+    cmd: "dnf versionlock add {{ item }}"
+  loop: "{{ kubernetes_packages }}"
+  changed_when: false
+  failed_when: false

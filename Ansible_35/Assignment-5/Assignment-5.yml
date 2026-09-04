@@ -1,0 +1,11 @@
+- name: Install and Configure Kubernetes
+  hosts: app
+  become: true
+
+  vars_prompt:
+    - name: kubernetes_version
+      prompt: "Enter Kubernetes version (example: 1.30.0)"
+      private: false
+
+  roles:
+    - kubernetes

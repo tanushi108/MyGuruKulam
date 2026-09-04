@@ -1,0 +1,400 @@
+---
+- name: Setup Spring3Hibernate Application
+  hosts: app
+  become: yes
+
+  vars:
+
+    # =======================================================
+    # Application
+    # =======================================================
+
+    app_repo: "https://github.com/opstree/spring3hibernate.git"
+    app_dir: "/opt/spring3hibernate"
+
+    # =======================================================
+    # Tomcat
+    # =======================================================
+
+    tomcat_version: "7.0.108"
+    tomcat_base_dir: "/opt/tomcat"
+    tomcat_dir: "/opt/tomcat/apache-tomcat-7.0.108"
+    tomcat_user: "tomcat"
+    tomcat_group: "tomcat"
+
+    war_destination: "/opt/tomcat/apache-tomcat-7.0.108/webapps"
+
+    # =======================================================
+    # Java
+    # =======================================================
+
+    java_home: "/usr/lib/jvm/java-11-openjdk-amd64"
+
+    # =======================================================
+    # MySQL
+    # =======================================================
+
+    mysql_database: "spring3hibernate"
+
+
+  tasks:
+
+    # =======================================================
+    # 1. UPDATE APT CACHE
+    # =======================================================
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+
+    # =======================================================
+    # 2. INSTALL REQUIRED PACKAGES
+    # =======================================================
+
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - git
+          - maven
+          - openjdk-11-jdk
+          - mysql-server
+          - python3-pymysql
+          - wget
+          - tar
+        state: present
+
+
+    # =======================================================
+    # 3. VERIFY JAVA 11
+    # =======================================================
+
+    - name: Check Java version
+      ansible.builtin.command:
+        cmd: java -version
+      register: java_version
+      changed_when: false
+
+    - name: Display Java version
+      ansible.builtin.debug:
+        var: java_version.stderr_lines
+
+
+    # =======================================================
+    # 4. VERIFY MAVEN
+    # =======================================================
+
+    - name: Check Maven version
+      ansible.builtin.command:
+        cmd: mvn -version
+      register: maven_version
+      changed_when: false
+
+    - name: Display Maven version
+      ansible.builtin.debug:
+        var: maven_version.stdout_lines
+
+
+    # =======================================================
+    # 5. INSTALL AND START MYSQL
+    # =======================================================
+
+    - name: Start and enable MySQL
+      ansible.builtin.systemd:
+        name: mysql
+        state: started
+        enabled: yes
+
+
+    # =======================================================
+    #  CREATE APPLICATION DATABASE
+    # =======================================================
+
+    - name: Create Spring3Hibernate database
+      ansible.mysql.mysql_db:
+        name: "{{ mysql_database }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+
+    # =======================================================
+    # 6. CREATE TOMCAT GROUP
+    # =======================================================
+
+    - name: Create Tomcat group
+      ansible.builtin.group:
+        name: "{{ tomcat_group }}"
+        state: present
+
+
+    # =======================================================
+    # 7. CREATE TOMCAT USER
+    # =======================================================
+
+    - name: Create Tomcat user
+      ansible.builtin.user:
+        name: "{{ tomcat_user }}"
+        group: "{{ tomcat_group }}"
+        shell: /bin/false
+        create_home: no
+        state: present
+
+
+    # =======================================================
+    #  CREATE TOMCAT DIRECTORY
+    # =======================================================
+
+    - name: Create Tomcat base directory
+      ansible.builtin.file:
+        path: "{{ tomcat_base_dir }}"
+        state: directory
+        owner: "{{ tomcat_user }}"
+        group: "{{ tomcat_group }}"
+        mode: "0755"
+
+
+    # =======================================================
+    # 8. DOWNLOAD TOMCAT
+    # =======================================================
+
+    - name: Download Tomcat 7.0.108
+      ansible.builtin.get_url:
+        url: "https://archive.apache.org/dist/tomcat/tomcat-7/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        dest: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        mode: "0644"
+
+
+    # =======================================================
+    #  EXTRACT TOMCAT
+    # =======================================================
+
+    - name: Extract Tomcat
+      ansible.builtin.unarchive:
+        src: "/tmp/apache-tomcat-{{ tomcat_version }}.tar.gz"
+        dest: "{{ tomcat_base_dir }}"
+        remote_src: yes
+        owner: "{{ tomcat_user }}"
+        group: "{{ tomcat_group }}"
+        creates: "{{ tomcat_dir }}"
+
+
+    # =======================================================
+    #  SET TOMCAT OWNERSHIP
+    # =======================================================
+
+    - name: Set Tomcat ownership
+      ansible.builtin.file:
+        path: "{{ tomcat_dir }}"
+        owner: "{{ tomcat_user }}"
+        group: "{{ tomcat_group }}"
+        recurse: yes
+
+
+    # =======================================================
+    #  MAKE TOMCAT SCRIPTS EXECUTABLE
+    # =======================================================
+
+    - name: Make Tomcat scripts executable
+      ansible.builtin.file:
+        path: "{{ tomcat_dir }}/bin"
+        mode: "0755"
+        recurse: yes
+
+
+    # =======================================================
+    # 9. CLONE SPRING3HIBERNATE APPLICATION
+    # =======================================================
+
+    - name: Clone Spring3Hibernate repository
+      ansible.builtin.git:
+        repo: "{{ app_repo }}"
+        dest: "{{ app_dir }}"
+        version: master
+        update: yes
+
+
+    # =======================================================
+    # 10. FIX LEGACY JAVA COMPILER CONFIGURATION
+    #
+    # The project uses Java 6 source/target settings.
+    # JDK 11 does not support source/target 6.
+    #
+    # Compile using Java 8 compatibility while retaining
+    # JDK 11 as the installed/runtime JDK.
+    # =======================================================
+
+    - name: Update Java source version in pom.xml
+      ansible.builtin.replace:
+        path: "{{ app_dir }}/pom.xml"
+        regexp: '<source>1\.6</source>'
+        replace: '<source>1.8</source>'
+
+
+    - name: Update Java target version in pom.xml
+      ansible.builtin.replace:
+        path: "{{ app_dir }}/pom.xml"
+        regexp: '<target>1\.6</target>'
+        replace: '<target>1.8</target>'
+
+
+    # =======================================================
+    # 11. BUILD WAR FILE
+    # =======================================================
+
+    - name: Build Spring3Hibernate WAR
+      ansible.builtin.command:
+        cmd: mvn clean package
+        chdir: "{{ app_dir }}"
+      environment:
+        JAVA_HOME: "{{ java_home }}"
+        PATH: "{{ java_home }}/bin:{{ ansible_env.PATH }}"
+      register: maven_build
+
+
+    # =======================================================
+    #  DISPLAY MAVEN BUILD RESULT
+    # =======================================================
+
+    - name: Display Maven build output
+      ansible.builtin.debug:
+        var: maven_build.stdout_lines
+
+
+    # =======================================================
+    # FIND GENERATED WAR
+    # =======================================================
+
+    - name: Find generated WAR file
+      ansible.builtin.find:
+        paths: "{{ app_dir }}/target"
+        patterns: "*.war"
+        file_type: file
+      register: war_file
+
+
+    # =======================================================
+    # FAIL IF WAR WAS NOT GENERATED
+    # =======================================================
+
+    - name: Fail if WAR file was not generated
+      ansible.builtin.fail:
+        msg: "Maven build completed but no WAR file was found."
+      when: war_file.files | length == 0
+
+
+    # =======================================================
+    # DISPLAY GENERATED WAR
+    # =======================================================
+
+    - name: Display generated WAR
+      ansible.builtin.debug:
+        msg: "Generated WAR: {{ war_file.files[0].path }}"
+
+
+    # =======================================================
+    # 12. DEPLOY WAR TO TOMCAT
+    # =======================================================
+
+    - name: Deploy Spring3Hibernate WAR
+      ansible.builtin.copy:
+        src: "{{ war_file.files[0].path }}"
+        dest: "{{ war_destination }}/Spring3Hibernate.war"
+        remote_src: yes
+        owner: "{{ tomcat_user }}"
+        group: "{{ tomcat_group }}"
+        mode: "0644"
+
+
+    # =======================================================
+    # 13. CREATE TOMCAT SYSTEMD SERVICE
+    # =======================================================
+
+    - name: Create Tomcat systemd service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/tomcat.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=Apache Tomcat 7.0.108
+          After=network.target
+
+          [Service]
+          Type=forking
+
+          User={{ tomcat_user }}
+          Group={{ tomcat_group }}
+
+          Environment="JAVA_HOME={{ java_home }}"
+          Environment="CATALINA_HOME={{ tomcat_dir }}"
+          Environment="CATALINA_BASE={{ tomcat_dir }}"
+
+          ExecStart={{ tomcat_dir }}/bin/startup.sh
+          ExecStop={{ tomcat_dir }}/bin/shutdown.sh
+
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+
+
+    # =======================================================
+    # 23. RELOAD SYSTEMD
+    # =======================================================
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+
+    # =======================================================
+    # ENABLE AND RESTART TOMCAT
+    # =======================================================
+
+    - name: Restart and enable Tomcat
+      ansible.builtin.systemd:
+        name: tomcat
+        state: restarted
+        enabled: yes
+
+
+    # =======================================================
+    # CHECK TOMCAT STATUS
+    # =======================================================
+
+    - name: Check Tomcat status
+      ansible.builtin.command:
+        cmd: systemctl is-active tomcat
+      register: tomcat_status
+      changed_when: false
+
+
+    - name: Display Tomcat status
+      ansible.builtin.debug:
+        msg: "Tomcat status: {{ tomcat_status.stdout }}"
+
+
+    # =======================================================
+    # VERIFY WAR DEPLOYMENT
+    # =======================================================
+
+    - name: Check deployed WAR
+      ansible.builtin.stat:
+        path: "{{ war_destination }}/Spring3Hibernate.war"
+      register: deployed_war
+
+
+    - name: Verify WAR deployment
+      ansible.builtin.debug:
+        msg: "Spring3Hibernate WAR deployed successfully."
+      when: deployed_war.stat.exists
+
+
+    # =======================================================
+    # FAIL IF WAR DEPLOYMENT FAILED
+    # =======================================================
+
+    - name: Fail if WAR deployment failed
+      ansible.builtin.fail:
+        msg: "Spring3Hibernate WAR deployment failed."
+      when: not deployed_war.stat.exists

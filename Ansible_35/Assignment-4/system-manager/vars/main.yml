@@ -1,0 +1,73 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for system-manager
+
+# Software to install
+packages:
+  - git
+  - openjdk-11-jdk
+  - maven
+
+
+# Groups
+system_groups:
+  - devops
+  - developers
+
+
+# Users
+users:
+
+  - name: devops
+    uid: 2001
+    shell: /bin/bash
+    groups:
+      - sudo
+    append: true
+    create_home: true
+
+  - name: developer
+    uid: 2002
+    shell: /bin/bash
+    groups:
+      - developers
+    append: true
+    create_home: true
+
+
+# Git repositories
+git_repositories:
+
+  - repo: "https://github.com/opstree/spring3hibernate.git"
+    dest: "/opt/projects/spring3hibernate"
+    version: master
+
+
+# Required directories
+directories:
+
+  - path: /opt/apps
+    owner: root
+    group: root
+    mode: "0755"
+
+  - path: /opt/projects
+    owner: root
+    group: root
+    mode: "0755"
+
+  - path: /opt/scripts
+    owner: root
+    group: root
+    mode: "0755"
+
+  - path: /opt/data
+    owner: root
+    group: root
+    mode: "0755"
+
+  - path: /var/log/myapp
+    owner: root
+    group: root
+    mode: "0755"
+

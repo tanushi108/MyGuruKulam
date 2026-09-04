@@ -1,0 +1,211 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install required dependencies
+  ansible.builtin.apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download Kubernetes repository key
+  ansible.builtin.get_url:
+    url: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version.split('.')[0] }}.{{ kubernetes_version.split('.')[1] }}/deb/Release.key"
+    dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    mode: '0644'
+
+- name: Add Kubernetes repository
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types:
+      - deb
+    uris:
+      - "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version.split('.')[0] }}.{{ kubernetes_version.split('.')[1] }}/deb/"
+    suites:
+      - /
+    components: []
+    signed_by: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+    state: present
+    enabled: true
+
+- name: Update apt cache after adding Kubernetes repository
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install Kubernetes packages
+  ansible.builtin.apt:
+    name:
+      - "kubelet={{ kubernetes_version }}-*"
+      - "kubeadm={{ kubernetes_version }}-*"
+      - "kubectl={{ kubernetes_version }}-*"
+    state: present
+    allow_downgrade: true
+
+- name: Hold Kubernetes packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop: "{{ kubernetes_packages }}"
+
+# ---------------------------------------------------------
+# Kernel configuration
+# ---------------------------------------------------------
+
+- name: Enable IPv4 forwarding
+  ansible.builtin.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: true
+
+- name: Disable swap
+  ansible.builtin.command:
+    cmd: swapoff -a
+  when: ansible_swaptotal_mb | int > 0
+  changed_when: true
+
+- name: Remove swap entries from fstab
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(\s*[^#]\S+\s+\S+\s+swap\s+.*)$'
+    replace: '# \1'
+
+# ---------------------------------------------------------
+# Containerd
+# ---------------------------------------------------------
+
+- name: Install containerd
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    update_cache: true
+
+- name: Create containerd configuration directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0755'
+
+- name: Configure containerd for Kubernetes
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    mode: '0644'
+    content: |
+      version = 3
+
+      root = "/var/lib/containerd"
+      state = "/run/containerd"
+
+      [grpc]
+        address = "/run/containerd/containerd.sock"
+
+      [plugins.'io.containerd.cri.v1.images']
+        snapshotter = "overlayfs"
+
+        [plugins.'io.containerd.cri.v1.images'.pinned_images]
+          sandbox = "registry.k8s.io/pause:3.10"
+
+      [plugins.'io.containerd.cri.v1.runtime']
+        [plugins.'io.containerd.cri.v1.runtime'.containerd]
+          default_runtime_name = "runc"
+
+          [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes]
+
+            [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc]
+              runtime_type = "io.containerd.runc.v2"
+
+              [plugins.'io.containerd.cri.v1.runtime'.containerd.runtimes.runc.options]
+                SystemdCgroup = true
+
+      [plugins.'io.containerd.cri.v1.runtime'.cni]
+        bin_dirs = ["/opt/cni/bin"]
+        conf_dir = "/etc/cni/net.d"
+        max_conf_num = 1
+
+  notify:
+    - Restart containerd
+
+# IMPORTANT:
+# Handler ko kubeadm se pehle run karna hai
+- name: Apply containerd changes immediately
+  ansible.builtin.meta: flush_handlers
+
+# ---------------------------------------------------------
+# Kubelet
+# ---------------------------------------------------------
+
+- name: Create kubelet systemd directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/kubelet.service.d
+    state: directory
+    mode: '0755'
+
+- name: Configure kubelet
+  ansible.builtin.template:
+    src: kubelet.conf.j2
+    dest: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+    mode: '0644'
+  notify:
+    - Restart kubelet
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable and start kubelet
+  ansible.builtin.systemd:
+    name: "{{ kubernetes_service }}"
+    enabled: true
+    state: started
+
+# ---------------------------------------------------------
+# Verify containerd
+# ---------------------------------------------------------
+
+- name: Check containerd status
+  ansible.builtin.command:
+    cmd: systemctl is-active containerd
+  register: containerd_status
+  changed_when: false
+
+- name: Display containerd status
+  ansible.builtin.debug:
+    var: containerd_status.stdout
+
+# ---------------------------------------------------------
+# Kubernetes initialization
+# ---------------------------------------------------------
+
+- name: Initialize Kubernetes cluster
+  ansible.builtin.command:
+    cmd: kubeadm init --pod-network-cidr=10.244.0.0/16
+    creates: /etc/kubernetes/admin.conf
+
+# ---------------------------------------------------------
+# Kubectl configuration
+# ---------------------------------------------------------
+
+- name: Create .kube directory
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: '0700'
+
+- name: Copy admin kubeconfig
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    remote_src: true
+    mode: '0600'
+
+

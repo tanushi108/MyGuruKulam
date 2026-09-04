@@ -1,0 +1,19 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for system-manager
+#
+
+# Software
+packages: []
+
+# Groups
+system_groups: []
+
+# Users
+users: []
+
+# Git repositories
+git_repositories: []
+
+# Required directories
+directories: []

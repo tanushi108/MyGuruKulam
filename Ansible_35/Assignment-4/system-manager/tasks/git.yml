@@ -1,0 +1,15 @@
+---
+- name: Install Git
+  apt:
+    name: git
+    state: present
+  become: true
+
+- name: Manage Git repositories
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    version: "{{ item.version | default('HEAD') }}"
+    update: true
+  loop: "{{ git_repositories }}"
+  become: true

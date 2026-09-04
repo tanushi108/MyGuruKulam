@@ -1,0 +1,19 @@
+---
+- name: Create required groups
+  group:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ system_groups }}"
+  become: true
+
+- name: Create required users
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid | default(omit) }}"
+    shell: "{{ item.shell | default('/bin/bash') }}"
+    groups: "{{ item.groups | default([]) }}"
+    append: "{{ item.append | default(false) }}"
+    create_home: "{{ item.create_home | default(true) }}"
+    state: "{{ item.state | default('present') }}"
+  loop: "{{ users }}"
+  become: true
