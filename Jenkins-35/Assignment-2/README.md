@@ -1,6 +1,5 @@
-# CI/CD Assignment 2 – Jenkins User Authentication & Authorization
+# Assignment-2
 
-Submitted by Devashish Sathawane
 
 **Part 1:** Role-based access control for 3 teams (Developer, Testing, DevOps) across 9 jobs and 3 views, using Jenkins' Role-Based Authorization Strategy.
 **Part 2:** Google SSO login for the admin user.
