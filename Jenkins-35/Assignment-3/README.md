@@ -1,18 +1,4 @@
-# Assignment - 03: CI Checks Using Jenkins
-
-## Objective
-
-Perform Continuous Integration (CI) checks on three different API repositories using Jenkins. The objective is to automate code validation, security checks, testing, code coverage, dependency analysis, report generation, artifact management, and failure notifications.
-
-The following repositories are used:
-
-| Language | Repository                                         | Application      |
-| -------- | -------------------------------------------------- | ---------------- |
-| Python   | https://github.com/OT-MICROSERVICES/attendance-api | Attendance API   |
-| GoLang   | https://github.com/OT-MICROSERVICES/employee-api   | Employee API     |
-| Java     | https://github.com/opstree/spring3hibernate.git    | Spring3Hibernate |
-
----
+<img width="1364" height="409" alt="image" src="https://github.com/user-attachments/assets/817a4e56-b48d-4f1b-8f69-28ce278ed08b" /># Assignment - 03: CI Checks Using Jenkins
 
 # 1. Requirements
 
@@ -43,58 +29,30 @@ A typical job structure is:
 Assignment-03
 │
 ├── Python
-│   ├── Python-Credential-Scan
-│   ├── Python-Unit-Test
-│   ├── Python-Code-Coverage
-│   └── Python-Dependency-Check
+│   ├── Credential-Scan
+│   ├── Unit-Testing
+│   ├── Code-Coverage
+│   └── Dependency-Check
 │
-├── GoLang
-│   ├── Go-Credential-Scan
-│   ├── Go-Unit-Test
-│   ├── Go-Code-Coverage
-│   └── Go-Dependency-Check
+├── Go
+│   ├── Credential-Scaning
+│   ├── Unit-Testing
+│   ├── Code-Coverage
+│   └── Dependency-Check
 │
 └── Java
-    ├── Java-Credential-Scan
-    ├── Java-Unit-Test
-    ├── Java-Code-Coverage
-    ├── Java-Dependency-Check
-    └── Java-SonarQube
+    ├── Credential-Scan
+    ├── Unit-Test
+    ├── Code-Coverage
+    └──  Dependency-Check
+    
 ```
 
-The exact number of jobs can be modified according to the CI requirements.
+<img width="1364" height="409" alt="image" src="https://github.com/user-attachments/assets/fd91c955-c036-4035-a979-5ed1d334f2dc" />
 
----
 
-# 3. Source Code Management
 
-GitHub is used as the source code management system.
-
-The repositories configured in Jenkins are:
-
-### Python
-
-```text
-https://github.com/OT-MICROSERVICES/attendance-api
-```
-
-### GoLang
-
-```text
-https://github.com/OT-MICROSERVICES/employee-api
-```
-
-### Java
-
-```text
-https://github.com/opstree/spring3hibernate.git
-```
-
-Each Jenkins job is configured to retrieve the source code from the corresponding GitHub repository before executing the CI checks.
-
----
-
-# 4. Python CI Checks
+# 3. Python CI Checks
 
 Repository:
 
@@ -104,7 +62,7 @@ https://github.com/OT-MICROSERVICES/attendance-api
 
 The Python project is checked using multiple CI stages.
 
-## 4.1 Credential Scanning
+## 3.1 Credential Scanning
 
 Credential scanning is performed to detect accidentally committed secrets such as:
 
@@ -120,35 +78,51 @@ Gitleaks can be used for credential scanning.
 Example:
 
 ```bash
-gitleaks detect --source . --no-banner
+gitleaks detect \
+  --source . \
+  --redact \
+  --report-format json \
+  --report-path gitleaks-report.json \
+  --exit-code 1
 ```
+<img width="1130" height="546" alt="image" src="https://github.com/user-attachments/assets/e8ff351c-1454-45c4-81a4-e3dcfb56d092" />
 
-If secrets are detected, the Jenkins build fails.
 
 ---
 
-## 4.2 Unit Testing
+## 3.2 Unit Testing
 
 Python unit tests are executed using the project's configured testing framework.
 
 Example:
 
 ```bash
-pytest
+poetry run pytest -v \
+    --junitxml="$WORKSPACE/test-results.xml" \
+    --cov=. \
+    --cov-report=html:"$WORKSPACE/htmlcov" \
+    --cov-report=term
 ```
 
-The test result files can be stored and published in Jenkins.
+
+<img width="1355" height="549" alt="image" src="https://github.com/user-attachments/assets/e87242d6-ad3f-438f-b231-c02e3274c9a5" />
 
 ---
 
-## 4.3 Code Coverage
+## 3.3 Code Coverage
 
 Code coverage is generated to determine how much of the application source code is executed by the tests.
 
 Example:
 
 ```bash
-pytest --cov=. --cov-report=xml --cov-report=html
+poetry run pytest \
+  --cov=. \
+  --cov-report=xml:coverage.xml \
+  --cov-report=html:htmlcov \
+  --junitxml=report.xml \
+  --ignore=client/tests/test_postgres_conn.py \
+  --ignore=client/tests/test_redis_conn.py
 ```
 
 The generated reports can include:
@@ -158,27 +132,22 @@ coverage.xml
 htmlcov/
 ```
 
-These reports are archived in Jenkins for later access.
+<img width="1140" height="530" alt="image" src="https://github.com/user-attachments/assets/bd6ce252-bb1d-4c1c-a5ba-643d1b59b2de" />
+
 
 ---
 
-## 4.4 Dependency Check
+## 3.4 Dependency Check
 
 Python dependencies are checked to identify outdated or vulnerable packages.
 
-Depending on the project configuration, tools such as `pip-audit` can be used.
-
-Example:
-
-```bash
-pip-audit
-```
-
 If a dependency contains a critical vulnerability, the build can be configured to fail.
+
+<img width="1328" height="591" alt="image" src="https://github.com/user-attachments/assets/d8796037-198c-46c6-8a73-14b1a1bf7a06" />
 
 ---
 
-# 5. GoLang CI Checks
+# 4. Go CI Checks
 
 Repository:
 
@@ -188,27 +157,38 @@ https://github.com/OT-MICROSERVICES/employee-api
 
 The Go project is checked using standard Go CI tools.
 
-## 5.1 Credential Scanning
+## 4.1 Credential Scanning
 
 Gitleaks is used to scan the repository for accidentally committed credentials.
 
 Example:
 
 ```bash
-gitleaks detect --source . --no-banner
+gitleaks detect \
+  --source . \
+  --redact \
+  --report-format json \
+  --report-path reports/gitleaks-report.json
 ```
+<img width="1184" height="620" alt="image" src="https://github.com/user-attachments/assets/24dce8a2-bc1e-48aa-87e1-e3033e7401f3" />
+
 
 ---
 
-## 5.2 Unit Testing
+## 4.2 Unit Testing
 
 Go unit tests are executed using:
 
 ```bash
-go test ./...
+go test -v ./... 2>&1 | tee reports/go-test-output.txt | \
+    "$(go env GOPATH)/bin/go-junit-report" \
+    > reports/junit-report.xml
 ```
 
 The command executes tests across the Go packages in the project.
+
+<img width="1206" height="588" alt="image" src="https://github.com/user-attachments/assets/bf008038-2d9e-4107-9602-7ea281053a79" />
+
 
 ---
 
@@ -217,13 +197,15 @@ The command executes tests across the Go packages in the project.
 Go coverage can be generated using:
 
 ```bash
-go test ./... -coverprofile=coverage.out
+go tool cover -func=reports/coverage.out | tee reports/coverage-summary.txt
 ```
 
 A human-readable coverage report can be generated using:
 
 ```bash
-go tool cover -html=coverage.out -o coverage.html
+go tool cover \
+    -html=reports/coverage.out \
+    -o reports/coverage.html
 ```
 
 The following files can be archived in Jenkins:
@@ -233,39 +215,24 @@ coverage.out
 coverage.html
 ```
 
----
-
-## 5.4 Static Analysis
-
-Go static analysis can be performed using:
-
-```bash
-go vet ./...
-```
-
-This helps identify suspicious constructs and potential problems in the source code.
+<img width="1125" height="581" alt="image" src="https://github.com/user-attachments/assets/d9abe1eb-767a-49cf-9c41-869c676d38bd" />
 
 ---
 
-## 5.5 Dependency Check
 
-Go dependencies are maintained through `go.mod` and `go.sum`.
+## 4.5 Dependency Check
 
 The dependency list can be checked using:
 
 ```bash
-go list -m all
+go list -m all > dependency-report.txt
 ```
+<img width="1293" height="577" alt="image" src="https://github.com/user-attachments/assets/2ba11b57-405e-4985-b98f-f105564d1689" />
 
-Additional vulnerability scanning can be performed using suitable Go security tools such as:
-
-```bash
-govulncheck ./...
-```
 
 ---
 
-# 6. Java CI Checks
+# 5. Java CI Checks
 
 Repository:
 
@@ -277,45 +244,30 @@ The Java application uses Maven for building and testing.
 
 ---
 
-## 6.1 Credential Scanning
+## 5.1 Credential Scanning
 
 The Java repository is scanned for exposed credentials using Gitleaks.
 
 Example:
 
 ```bash
-gitleaks detect --source . --no-banner
+gitleaks detect \
+  --source . \
+  --redact \
+  --report-format json \
+  --report-path gitleaks-report.json \
+  --exit-code 0
 ```
 
 The Jenkins build fails if credentials or secrets are detected according to the configured Gitleaks rules.
 
----
+<img width="1205" height="604" alt="image" src="https://github.com/user-attachments/assets/2653bbbf-cf81-48fd-82a4-8ea99ace2d43" />
 
-## 6.2 Build
-
-The Maven project is compiled and packaged using:
-
-```bash
-mvn clean package
-```
-
-For a build without executing tests:
-
-```bash
-mvn clean package -DskipTests
-```
-
-The generated WAR file is stored as a Jenkins artifact.
-
-Example:
-
-```text
-target/Spring3HibernateApp.war
-```
 
 ---
 
-## 6.3 Unit Testing
+
+## 5.2 Unit Testing
 
 Maven executes the project's unit tests using:
 
@@ -326,14 +278,16 @@ mvn test
 Maven normally generates test reports under:
 
 ```text
-target/surefire-reports/
+target/surefire-reports/*.xml
 ```
 
 These reports can be published in Jenkins using the JUnit publisher.
 
+<img width="1308" height="617" alt="image" src="https://github.com/user-attachments/assets/ba1ce41e-c019-4d9a-bd77-c3b23ca63804" />
+
 ---
 
-## 6.4 Code Coverage
+## 5.3 Code Coverage
 
 JaCoCo is used for Java code coverage.
 
@@ -341,7 +295,7 @@ Example:
 
 ```bash
 mvn test
-mvn jacoco:report
+mvn org.jacoco:jacoco-maven-plugin:0.8.13:report
 ```
 
 The generated report is generally available under:
@@ -354,49 +308,16 @@ The complete JaCoCo report can be archived in Jenkins.
 
 ---
 
-## 6.5 Dependency Check
+## 5.5 Dependency Check
 
 The Java project's Maven dependencies can be checked for known vulnerabilities.
 
-OWASP Dependency-Check can be integrated with Maven/Jenkins to scan project dependencies.
-
-Example Maven command:
-
-```bash
-mvn org.owasp:dependency-check-maven:check
-```
-
 The generated dependency-check report can be stored as a Jenkins artifact.
 
----
+<img width="1241" height="580" alt="image" src="https://github.com/user-attachments/assets/2ca83509-f02c-4c76-9456-087ea0709703" />
 
-## 6.6 SonarQube Analysis
-
-SonarQube is used for static code quality analysis.
-
-The Maven SonarQube scanner can be executed using:
-
-```bash
-mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-    -Dsonar.projectKey=Spring3Hibernate \
-    -Dsonar.projectName=Spring3Hibernate
-```
-
-The SonarQube server is configured in Jenkins using the SonarQube installation configuration.
-
-SonarQube can analyze:
-
-* Bugs
-* Vulnerabilities
-* Code smells
-* Duplicated code
-* Maintainability
-* Reliability
-* Security
-* Code coverage information
 
 ---
-
 # 7. Report Management
 
 Reports generated during CI execution are stored in Jenkins.
@@ -438,70 +359,8 @@ target/dependency-check-report.html
 
 ---
 
-# 8. Jenkins Artifact Management
 
-Build artifacts are archived in Jenkins after successful CI checks.
-
-For the Java application, the WAR file is treated as the main build artifact.
-
-Example:
-
-```text
-target/Spring3HibernateApp.war
-```
-
-Jenkins `archiveArtifacts` can be used to store artifacts.
-
-Example:
-
-```groovy
-archiveArtifacts(
-    artifacts: 'target/*.war',
-    fingerprint: true
-)
-```
-
-The `fingerprint` option allows Jenkins to track the artifact across builds and jobs.
-
----
-
-# 9. Local Artifact Storage
-
-Jenkins can store artifacts locally on the Jenkins controller or configured build node.
-
-The artifacts are associated with the corresponding Jenkins build.
-
-Example:
-
-```text
-Jenkins
-  └── Job
-      └── Build #1
-          ├── Reports
-          └── Artifacts
-```
-
-This method is suitable for assignment or small CI environments.
-
----
-
-# 10. Remote Artifact Storage
-
-For production environments, artifacts can be stored in remote artifact repositories or object storage.
-
-Possible solutions include:
-
-* AWS S3
-* Nexus Repository
-* JFrog Artifactory
-* Google Cloud Storage
-* Azure Blob Storage
-
-Remote storage provides better scalability and persistence for large CI/CD environments.
-
----
-
-# 11. Failure Notifications
+# 8. Failure Notifications
 
 Jenkins is configured to send notifications when CI checks fail.
 
@@ -516,13 +375,12 @@ The notification should contain useful build information such as:
 Job Name
 Build Number
 Build Status
-Failed Stage
 Build URL
 ```
 
 ---
 
-# 12. Email Notification
+# 9. Email Notification
 
 Email notifications are configured using Jenkins email plugins such as Email Extension Plugin.
 
@@ -530,74 +388,44 @@ A failure notification can contain:
 
 ```text
 Subject:
-FAILED: <JOB_NAME> #<BUILD_NUMBER>
+FAILED:  $JOB_NAME #$BUILD_NUMBER
 
 Message:
 
-Jenkins CI Pipeline Failed.
+Hello Team,
 
-Job: <JOB_NAME>
-Build: <BUILD_NUMBER>
-Status: FAILURE
+Job Name: $JOB_NAME
+Build Number: #$BUILD_NUMBER
+Build Status: $BUILD_STATUS
 
 Please check the Jenkins console output for details.
 
-Build URL:
-<BUILD_URL>
+Build URL: $BUILD_URL
+
+The automated CI checks and test execution have been completed.
+
+Regards,
+Jenkins CI
 ```
 
 Email notifications are configured to trigger when a CI job fails.
 
+<img width="778" height="472" alt="image" src="https://github.com/user-attachments/assets/0579e29f-0a69-4203-943d-3b0886f10218" />
+
+
 ---
 
-# 13. Slack Notification
+# 10. Slack Notification
 
 Slack notifications are configured using the Jenkins Slack Notification plugin.
 
-Example failure message:
-
-```text
-FAILED: Python-Code-Coverage #15
-
-The Jenkins CI check has failed.
-
-Build URL:
-http://localhost:8080/job/Python-Code-Coverage/15/
-```
-
 Slack notifications provide quick visibility of failed builds.
 
----
-
-# 14. Failure Handling
-
-The Jenkins jobs are configured so that a failed CI check causes the build to fail.
-
-Examples:
-
-```text
-Credential Scan Failed
-        ↓
-Build Failed
-
-Unit Test Failed
-        ↓
-Build Failed
-
-Dependency Check Failed
-        ↓
-Build Failed
-
-Code Quality Check Failed
-        ↓
-Build Failed
-```
-
-Failure notifications are then triggered through Email and Slack.
+<img width="1309" height="549" alt="image" src="https://github.com/user-attachments/assets/fcf6bd7b-1cfe-4924-9f03-ce2d354326ef" />
 
 ---
 
-# 15. CI Workflow
+# CI Workflow
 
 The overall CI workflow is:
 
@@ -640,134 +468,6 @@ Success / Failure Notification
 
 ---
 
-# 16. Generic CI Checks
-
-The following generic checks are implemented across the repositories where applicable:
-
-* Git repository checkout
-* Credential scanning
-* Build validation
-* Unit testing
-* Static analysis
-* Dependency checking
-* Code coverage
-* Report generation
-* Artifact archiving
-* Failure notification
-
-These checks help identify problems before the application reaches later stages of the software delivery lifecycle.
-
----
-
-# 17. Advanced CI Checks
-
-Advanced checks include:
-
-* SonarQube static code analysis
-* OWASP Dependency-Check
-* Gitleaks secret scanning
-* JaCoCo code coverage
-* Go static analysis
-* Go vulnerability scanning
-* Python dependency auditing
-* Artifact fingerprinting
-* Automated Slack notifications
-* Automated Email notifications
-
----
-
-# 18. Jenkins Plugins Used
-
-The following Jenkins plugins/tools can be used for this assignment:
-
-* Git Plugin
-* Pipeline Plugin
-* JUnit Plugin
-* Email Extension Plugin
-* Slack Notification Plugin
-* SonarQube Scanner for Jenkins
-* Credentials Plugin
-* Workspace Cleanup Plugin
-* HTML Publisher Plugin
-* OWASP Dependency-Check Plugin, where applicable
-
-External tools used include:
-
-```text
-Git
-Jenkins
-Maven
-Java
-Python
-pytest
-Gitleaks
-Go
-JaCoCo
-SonarQube
-OWASP Dependency-Check
-pip-audit
-govulncheck
-```
-
----
-
-# 19. Result
-
-The CI setup successfully provides automated validation for three repositories:
-
-### Python
-
-```text
-attendance-api
-```
-
-Checks include:
-
-```text
-Credential Scanning
-Unit Testing
-Code Coverage
-Dependency Checking
-```
-
-### GoLang
-
-```text
-employee-api
-```
-
-Checks include:
-
-```text
-Credential Scanning
-Unit Testing
-Code Coverage
-Static Analysis
-Dependency/Vulnerability Checking
-```
-
-### Java
-
-```text
-spring3hibernate
-```
-
-Checks include:
-
-```text
-Credential Scanning
-Maven Build
-Unit Testing
-JaCoCo Code Coverage
-Dependency Checking
-SonarQube Code Quality
-```
-
-Reports are stored and accessible from Jenkins, while application artifacts such as the WAR file are archived for future use.
-
-Failure notifications are configured through Email and Slack to provide immediate information about unsuccessful CI checks.
-
----
 
 # 20. Conclusion
 
