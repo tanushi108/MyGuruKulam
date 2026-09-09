@@ -1,4 +1,4 @@
-# Assignment - 03: CI Checks Using Jenkins
+# Assignment -3: CI Checks Using Jenkins
 
 # 1. Requirements
 
@@ -305,6 +305,9 @@ target/site/jacoco/
 ```
 
 The complete JaCoCo report can be archived in Jenkins.
+
+<img width="1150" height="570" alt="image" src="https://github.com/user-attachments/assets/c3c5134c-6dbc-4921-88e1-01ffa0a520f2" />
+
 
 ---
 
