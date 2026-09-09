@@ -1,4 +1,4 @@
-<img width="1364" height="409" alt="image" src="https://github.com/user-attachments/assets/817a4e56-b48d-4f1b-8f69-28ce278ed08b" /># Assignment - 03: CI Checks Using Jenkins
+# Assignment - 03: CI Checks Using Jenkins
 
 # 1. Requirements
 
