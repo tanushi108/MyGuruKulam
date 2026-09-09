@@ -63,6 +63,8 @@ Maven can be used to execute the tests:
 ```bash
 mvn test
 ```
+<img width="534" height="291" alt="image" src="https://github.com/user-attachments/assets/b21b5948-2a93-4207-bc98-3dc189226837" />
+
 
 This stage helps identify:
 
@@ -100,6 +102,7 @@ SonarQube can detect:
 <img width="1343" height="577" alt="image" src="https://github.com/user-attachments/assets/2c8bda6f-4881-4bd1-8e48-ac5c1bcf6479" />
 
 
+<img width="1138" height="403" alt="image" src="https://github.com/user-attachments/assets/45757c63-3a5d-4456-a57f-5d7cfef38eec" />
 
 ---
 
@@ -159,6 +162,9 @@ publishHTML([
 
 The reports allow developers to review test results, code coverage, and code quality.
 
+<img width="703" height="408" alt="image" src="https://github.com/user-attachments/assets/aad22f40-24c1-4af5-bb73-86ec73defca3" />
+
+<img width="611" height="369" alt="image" src="https://github.com/user-attachments/assets/beec72de-3078-4fd5-bd88-7f1750096b13" />
 
 ---
 
@@ -182,6 +188,9 @@ stage('Approval') {
 The artifact publishing stage is executed only after the user approves the publication.
 
 If the user denies or aborts the approval, the publication does not take place.
+
+
+<img width="1355" height="642" alt="image" src="https://github.com/user-attachments/assets/0d378ba9-9973-4515-a758-30a80cc2970a" />
 
 ---
 
@@ -217,7 +226,7 @@ A successful build can send a success notification:
 ```groovy
 slackSend(
     channel: '#jenkins',
-    message: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+    message: "SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}"
 )
 ```
 
@@ -226,11 +235,14 @@ A failed build can send a failure notification:
 ```groovy
 slackSend(
     channel: '#jenkins',
-    message: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+    message: "FAILED: ${JOB_NAME} #${BUILD_NUMBER}"
 )
 ```
 
 Slack notifications provide quick visibility into the Jenkins build status.
+
+<img width="1266" height="482" alt="image" src="https://github.com/user-attachments/assets/dbbfc35d-24f9-4e76-8488-c51f00bbd3c1" />
+
 
 ---
 
@@ -244,7 +256,7 @@ Example successful build notification:
 emailext(
     subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
     body: "Build completed successfully.",
-    to: "recipient@example.com"
+    to: "tanushirana081@gmail.com"
 )
 ```
 
@@ -254,359 +266,16 @@ Example failed build notification:
 emailext(
     subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
     body: "Build failed. Please check the Jenkins console output.",
-    to: "recipient@example.com"
+    to: "tanushirana081@email.com"
 )
 ```
 
 Replace the recipient email address with the required email address.
 
----
-
-## 12. Build Parameters
-
-When the user selects **Build with Parameters**, Jenkins provides options to skip scans.
-
-### Run all scans
-
-```text
-SKIP_STABILITY = false
-SKIP_QUALITY   = false
-SKIP_COVERAGE  = false
-```
-
-All CI checks are executed.
-
-### Skip Code Quality
-
-```text
-SKIP_STABILITY = false
-SKIP_QUALITY   = true
-SKIP_COVERAGE  = false
-```
-
-The Code Quality stage is skipped.
-
-### Skip Code Coverage
-
-```text
-SKIP_STABILITY = false
-SKIP_QUALITY   = false
-SKIP_COVERAGE  = true
-```
-
-The Code Coverage stage is skipped.
+<img width="1118" height="345" alt="image" src="https://github.com/user-attachments/assets/37956d88-540c-43c5-b55f-9a25f43034c1" />
 
 ---
 
-## 13. Jenkinsfile
-
-A basic implementation of the pipeline is shown below:
-
-```groovy
-pipeline {
-
-    agent any
-
-    parameters {
-
-        booleanParam(
-            name: 'SKIP_STABILITY',
-            defaultValue: false,
-            description: 'Skip code stability analysis'
-        )
-
-        booleanParam(
-            name: 'SKIP_QUALITY',
-            defaultValue: false,
-            description: 'Skip code quality analysis'
-        )
-
-        booleanParam(
-            name: 'SKIP_COVERAGE',
-            defaultValue: false,
-            description: 'Skip code coverage analysis'
-        )
-    }
-
-    stages {
-
-        stage('Code Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('CI Checks') {
-
-            parallel {
-
-                stage('Code Stability') {
-                    when {
-                        expression {
-                            !params.SKIP_STABILITY
-                        }
-                    }
-
-                    steps {
-                        sh 'mvn test'
-
-                        junit(
-                            testResults: 'target/surefire-reports/*.xml',
-                            allowEmptyResults: true
-                        )
-                    }
-                }
-
-                stage('Code Quality') {
-                    when {
-                        expression {
-                            !params.SKIP_QUALITY
-                        }
-                    }
-
-                    steps {
-                        withSonarQubeEnv('SonarQube') {
-                            sh 'mvn sonar:sonar'
-                        }
-                    }
-                }
-
-                stage('Code Coverage') {
-                    when {
-                        expression {
-                            !params.SKIP_COVERAGE
-                        }
-                    }
-
-                    steps {
-                        sh 'mvn test jacoco:report'
-                    }
-                }
-            }
-        }
-
-        stage('Generate Reports') {
-            steps {
-                publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: 'target/site/jacoco',
-                    reportFiles: 'index.html',
-                    reportName: 'JaCoCo Coverage Report'
-                ])
-            }
-        }
-
-        stage('Approval') {
-            steps {
-                input(
-                    message: 'Approve artifact publication?',
-                    ok: 'Approve'
-                )
-            }
-        }
-
-        stage('Publish Artifacts') {
-            steps {
-                archiveArtifacts(
-                    artifacts: 'target/*.jar',
-                    fingerprint: true
-                )
-            }
-        }
-    }
-
-    post {
-
-        success {
-
-            slackSend(
-                channel: '#jenkins',
-                message: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-            )
-
-            emailext(
-                subject: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-Build completed successfully.
-
-Job: ${env.JOB_NAME}
-Build: #${env.BUILD_NUMBER}
-Result: SUCCESS
-
-Artifacts have been published.
-""",
-                to: "recipient@example.com"
-            )
-        }
-
-        failure {
-
-            slackSend(
-                channel: '#jenkins',
-                message: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-            )
-
-            emailext(
-                subject: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """
-Build failed.
-
-Job: ${env.JOB_NAME}
-Build: #${env.BUILD_NUMBER}
-Result: FAILURE
-
-Please check the Jenkins console output.
-""",
-                to: "recipient@example.com"
-            )
-        }
-
-        aborted {
-
-            slackSend(
-                channel: '#jenkins',
-                message: "ABORTED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-            )
-        }
-    }
-}
-```
-
----
-
-## 14. Jenkins Configuration
-
-### Maven
-
-Configure Maven from:
-
-```text
-Manage Jenkins
-→ Tools
-→ Maven installations
-```
-
-Make sure the configured Maven installation is available to the Jenkins agent.
-
-### JDK
-
-Configure the required Java version from:
-
-```text
-Manage Jenkins
-→ Tools
-→ JDK installations
-```
-
-The Java version should be compatible with the project's `pom.xml`.
-
-### SonarQube
-
-Configure SonarQube from:
-
-```text
-Manage Jenkins
-→ System
-→ SonarQube servers
-```
-
-The name configured in Jenkins should match:
-
-```groovy
-withSonarQubeEnv('SonarQube')
-```
-
-### Slack
-
-Configure the Slack notification integration and Jenkins credentials/token as required.
-
-### Email
-
-Configure SMTP and Extended E-mail Notification from:
-
-```text
-Manage Jenkins
-→ System
-```
-
----
-
-## 15. Reports and Artifacts
-
-The pipeline can generate the following files:
-
-```text
-target/
-├── *.jar
-├── surefire-reports/
-│   └── *.xml
-└── site/
-    └── jacoco/
-        └── index.html
-```
-
-### Reports
-
-* JUnit – Unit test results
-* JaCoCo – Code coverage
-* SonarQube – Code quality analysis
-
-### Artifacts
-
-* JAR
-* WAR
-* Other build output files as required
-
----
-
-## 16. Notification Conditions
-
-### Successful Build
-
-Slack and email notifications are sent when the pipeline completes successfully.
-
-The notification confirms:
-
-* Job name
-* Build number
-* Build status
-* Artifact publication status
-
-### Failed Build
-
-Slack and email notifications are sent when a pipeline stage fails.
-
-The notification informs the user that the build failed and asks them to check the Jenkins console output.
-
-### Aborted Build
-
-A Slack notification can also be sent when the pipeline is manually aborted.
-
----
-
-## 17. Assignment Requirements
-
-| Requirement                | Implementation               |
-| -------------------------- | ---------------------------- |
-| Declarative CI Pipeline    | Jenkins Declarative Pipeline |
-| Java Project               | Maven-based Java project     |
-| Code Checkout              | Git Checkout                 |
-| Code Stability             | Maven/JUnit tests            |
-| Code Quality               | SonarQube                    |
-| Code Coverage              | JaCoCo                       |
-| Parallel Execution         | Jenkins `parallel`           |
-| Skip Scans                 | Boolean build parameters     |
-| Report Generation          | JUnit/JaCoCo/SonarQube       |
-| Artifact Publishing        | Jenkins `archiveArtifacts`   |
-| Approval Before Publishing | Jenkins `input`              |
-| Slack Notification         | `slackSend`                  |
-| Email Notification         | `emailext`                   |
-| Success Notification       | `post { success }`           |
-| Failure Notification       | `post { failure }`           |
-
----
 
 ## Conclusion
 
