@@ -65,7 +65,10 @@ RUN_QUALITY
 RUN_COVERAGE
 ```
 
-In this case, stability and quality analysis will execute, while coverage analysis will be skipped.
+
+<img width="1362" height="378" alt="image" src="https://github.com/user-attachments/assets/db480e3d-a828-4f18-b724-5db020e37411" />
+
+
 
 ---
 
@@ -75,7 +78,7 @@ The three analysis stages are independent, so they can execute simultaneously.
 
 Jenkins Scripted Pipeline provides the `parallel` step for this purpose.
 
-Example:
+<img width="1365" height="376" alt="image" src="https://github.com/user-attachments/assets/68de5725-ace5-4d44-b926-123d1cb6e287" />
 
 
 ---
@@ -87,7 +90,7 @@ The Code Stability stage executes the project's automated tests.
 Example:
 
 ```bash
-mvn test
+mvn clean test -Dfindbugs.skip=true
 ```
 
 JUnit tests verify whether the application is functioning correctly.
@@ -100,6 +103,9 @@ The stage helps identify:
 * Unstable code
 
 If the tests fail, the pipeline can be marked as failed.
+
+<img width="1360" height="601" alt="image" src="https://github.com/user-attachments/assets/b41f87bd-962d-41c0-b39d-257ff723b61c" />
+
 
 ---
 
@@ -148,6 +154,7 @@ Typical JaCoCo report location:
 ```text
 target/site/jacoco/
 ```
+<img width="1338" height="560" alt="image" src="https://github.com/user-attachments/assets/f0d624fc-5fe5-4c1f-8bec-7d898143b3b9" />
 
 ---
 
@@ -175,10 +182,13 @@ The JaCoCo HTML report can be archived from:
 ```text
 target/site/jacoco/**
 ```
+<img width="620" height="364" alt="image" src="https://github.com/user-attachments/assets/96ee5d66-55d3-4f22-a9b0-2b1a21e26769" />
 
 ## SonarQube Report
 
 SonarQube provides the quality analysis results through the SonarQube dashboard.
+
+<img width="1365" height="525" alt="image" src="https://github.com/user-attachments/assets/4acbc463-e630-41a1-9cc8-de7f526be4e1" />
 
 ---
 
@@ -216,17 +226,6 @@ If the user approves the publication, the pipeline publishes the generated artif
 
 For a Maven Java project, artifacts are generally generated inside:
 
-```text
-target/
-```
-
-For example:
-
-```text
-target/*.jar
-```
-
-or:
 
 ```text
 target/*.war
@@ -245,27 +244,17 @@ stage('Publish Artifacts') {
 
 The artifact becomes available from the Jenkins build page.
 
+
+<img width="1080" height="241" alt="image" src="https://github.com/user-attachments/assets/7738c128-11fe-41d8-a07c-ccbc2861c8f8" />
+
 ---
 
 # 10. Slack Notification
 
-Slack notifications inform the development team about the pipeline result.
+Slack notifications inform the development team about the pipeline failure.
 
-Example:
 
-```groovy
-slackSend(
-    message: "Java CI Pipeline completed successfully: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-)
-```
-
-Slack notifications can be sent for:
-
-* Successful build
-* Failed build
-* Successful publication
-* Failed publication
-* Approval/denial
+<img width="1321" height="435" alt="image" src="https://github.com/user-attachments/assets/bd6604f9-1689-4a65-a942-1c5ac385631b" />
 
 ---
 
