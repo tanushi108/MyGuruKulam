@@ -21,28 +21,6 @@ The pipeline automates the complete Continuous Integration process, including:
 
 ---
 
-# Scripted Pipeline
-
-Jenkins Scripted Pipeline uses **Groovy scripting** and provides more programming flexibility than Declarative Pipeline.
-
-A Scripted Pipeline generally starts with:
-
-```groovy
-node {
-    // Pipeline code
-}
-```
-
-The pipeline stages are created using:
-
-```groovy
-stage('Stage Name') {
-    // steps
-}
-```
-
----
-
 # Pipeline Stages
 
 ## 1. Code Checkout
@@ -50,6 +28,10 @@ stage('Stage Name') {
 The first stage checks out the source code from the Git repository.
 
 This downloads the project source code into the Jenkins workspace.
+
+```
+https://github.com/opstree/spring3hibernate.git
+```
 
 ---
 
@@ -460,5 +442,3 @@ This assignment demonstrates how to implement a complete **Jenkins Scripted CI P
 The pipeline performs code checkout, parallel stability/quality/coverage analysis, report generation, configurable scan execution, manual approval, artifact publishing, and Slack/Email notifications.
 
 The use of a manual approval step ensures that artifacts are published only after authorization, while the configurable scan parameters provide flexibility to the user during build execution.
-
-The assignment also demonstrates the key advantages of **Scripted Pipeline**, particularly its ability to use Groovy programming constructs such as `if/else`, `try-catch`, variables, maps, and dynamic pipeline logic.
