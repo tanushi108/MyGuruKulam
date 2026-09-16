@@ -149,13 +149,15 @@ After the parallel analysis stages are completed, the pipeline generates and pub
 ```groovy
 junit 'target/surefire-reports/*.xml'
 ```
-
 JUnit reports display:
 
 * Total tests
 * Passed tests
 * Failed tests
 * Skipped tests
+
+<img width="794" height="321" alt="image" src="https://github.com/user-attachments/assets/8a65b389-c094-4ef6-a1d6-bec9e7a37495" />
+
 
 ## JaCoCo Report
 
@@ -199,6 +201,8 @@ The user can either:
 * Abort/deny the publication
 
 The artifact is **not published before approval**.
+
+<img width="1185" height="602" alt="image" src="https://github.com/user-attachments/assets/b7e57b6b-9b23-4d1e-9e76-c6a733dc4b0c" />
 
 ---
 
@@ -249,191 +253,17 @@ Example:
 ```groovy
 emailext(
     subject: "Jenkins Build: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-    body: "The Jenkins pipeline has completed.",
-    to: "team@example.com"
+    body: "The Jenkins pipeline has failed.",
+    to: "tanushirana875@gmail.com"
 )
 ```
 
-Email notifications can be configured for:
 
-* Build success
-* Build failure
-* Artifact publication success
-* Artifact publication failure
+<img width="1070" height="327" alt="image" src="https://github.com/user-attachments/assets/245267db-aa26-4982-85ec-654644d5b317" />
 
 ---
 
-# 12. Handling Approval and Failure
 
-The Scripted Pipeline can use `try-catch` to handle errors and approval decisions.
-
-Example:
-
-```groovy
-try {
-
-    // Pipeline stages
-
-} catch (err) {
-
-    currentBuild.result = 'FAILURE'
-
-    slackSend(
-        message: "Pipeline failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-    )
-
-    emailext(
-        subject: "Pipeline Failed",
-        body: "The Jenkins pipeline failed.",
-        to: "team@example.com"
-    )
-
-    throw err
-}
-```
-
-This ensures that failures are properly handled and users are notified.
-
----
-
-# Complete Scripted Pipeline Structure
-
-The overall Scripted Pipeline can be structured as follows:
-
-```groovy
-node {
-
-    properties([
-        parameters([
-            booleanParam(
-                name: 'RUN_STABILITY',
-                defaultValue: true,
-                description: 'Run code stability tests'
-            ),
-            booleanParam(
-                name: 'RUN_QUALITY',
-                defaultValue: true,
-                description: 'Run code quality analysis'
-            ),
-            booleanParam(
-                name: 'RUN_COVERAGE',
-                defaultValue: true,
-                description: 'Run code coverage analysis'
-            )
-        ])
-    ])
-
-    try {
-
-        stage('Code Checkout') {
-            git branch: 'master',
-                url: 'https://github.com/example/java-project.git'
-        }
-
-        def parallelStages = [:]
-
-        parallelStages['Code Stability'] = {
-            stage('Code Stability') {
-                if (params.RUN_STABILITY) {
-                    sh 'mvn test'
-                } else {
-                    echo 'Stability scan skipped'
-                }
-            }
-        }
-
-        parallelStages['Code Quality'] = {
-            stage('Code Quality') {
-                if (params.RUN_QUALITY) {
-                    sh 'mvn sonar:sonar'
-                } else {
-                    echo 'Quality scan skipped'
-                }
-            }
-        }
-
-        parallelStages['Code Coverage'] = {
-            stage('Code Coverage') {
-                if (params.RUN_COVERAGE) {
-                    sh 'mvn test jacoco:report'
-                } else {
-                    echo 'Coverage scan skipped'
-                }
-            }
-        }
-
-        stage('Parallel Analysis') {
-            parallel parallelStages
-        }
-
-        stage('Generate Reports') {
-
-            if (params.RUN_STABILITY) {
-                junit 'target/surefire-reports/*.xml'
-            }
-
-            if (params.RUN_COVERAGE) {
-                archiveArtifacts(
-                    artifacts: 'target/site/jacoco/**',
-                    allowEmptyArchive: true
-                )
-            }
-
-            echo 'Reports generated successfully'
-        }
-
-        stage('Approval') {
-
-            input(
-                message: 'Approve artifact publication?',
-                ok: 'Approve'
-            )
-
-            echo 'Publication approved'
-        }
-
-        stage('Publish Artifacts') {
-
-            archiveArtifacts(
-                artifacts: 'target/*.jar',
-                fingerprint: true
-            )
-
-            echo 'Artifacts published successfully'
-        }
-
-        slackSend(
-            message: "SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-        )
-
-        emailext(
-            subject: "Build Successful: ${env.JOB_NAME}",
-            body: "Build #${env.BUILD_NUMBER} completed successfully.",
-            to: 'team@example.com'
-        )
-
-    } catch (err) {
-
-        currentBuild.result = 'FAILURE'
-
-        slackSend(
-            message: "FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
-        )
-
-        emailext(
-            subject: "Build Failed: ${env.JOB_NAME}",
-            body: "Build #${env.BUILD_NUMBER} failed.",
-            to: 'team@example.com'
-        )
-
-        throw err
-    }
-}
-```
-
-
-
----
 
 # Conclusion
 
