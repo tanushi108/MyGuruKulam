@@ -15,18 +15,6 @@ The required inputs are provided through a configuration file.
 
 ---
 
-## Technologies Used
-
-- Jenkins
-- Jenkins Shared Library
-- Ansible
-- AWS EKS
-- eksctl
-- kubectl
-- GitHub
-- Slack
-
----
 
 ## Project Structure
 
@@ -62,56 +50,13 @@ The Jenkins Shared Library is configured in Jenkins with:
 Name: devops-shared-library
 Branch: main
 
-The library is used in the Jenkinsfile:
+<img width="1183" height="408" alt="image" src="https://github.com/user-attachments/assets/c58c8ea0-f64e-4e59-a65f-b1fa7588a417" />
 
-@Library('devops-shared-library') _
 
-The Shared Library function is:
 
-eksAutomation()
-Configuration
+<img width="1123" height="534" alt="image" src="https://github.com/user-attachments/assets/55582f8d-11b0-41ef-b63e-bc36abf5a5b8" />
 
-The required inputs are passed through a configuration file.
 
-Example:
-
-SLACK_CHANNEL_NAME: build-status
-ENVIRONMENT: learning
-CODE_BASE_PATH: .
-ACTION_MESSAGE: "EKS automation build completed"
-KEEP_APPROVAL_STAGE: true
-AWS_REGION: ap-south-1
-Configuration Parameters
-Parameter	Description
-SLACK_CHANNEL_NAME	Slack channel for build notifications
-ENVIRONMENT	Target environment
-CODE_BASE_PATH	Path of the Ansible code
-ACTION_MESSAGE	Slack notification message
-KEEP_APPROVAL_STAGE	Enables or disables user approval
-AWS_REGION	AWS region
-Pipeline Flow
-Jenkins
-   |
-   v
-Shared Library
-   |
-   v
-Read Configuration
-   |
-   v
-Clone
-   |
-   v
-User Approval
-   |
-   v
-Playbook Execution
-   |
-   v
-AWS EKS
-   |
-   v
-Notification
 ## 1. Clone
 
 The Shared Library clones the Ansible repository from GitHub.
@@ -126,7 +71,7 @@ main
 
 The repository contains the Ansible playbook and EKS configuration.
 
-## 2. User Approval
+## 2. Parameters and User approval
 
 Before executing the EKS operation, Jenkins asks for user approval.
 
@@ -136,7 +81,6 @@ EKS Automation
 
 Operation: CREATE
 Cluster: my-cluster
-Environment: learning
 
 Do you want to continue?
 
@@ -145,6 +89,11 @@ The approval stage is controlled by:
 KEEP_APPROVAL_STAGE: true
 
 If approval is enabled, the pipeline waits for user confirmation before executing the playbook.
+
+<img width="1074" height="461" alt="image" src="https://github.com/user-attachments/assets/1ef4f045-192c-4afe-9ac7-29be4d075871" />
+
+<img width="1365" height="591" alt="image" src="https://github.com/user-attachments/assets/99d960c9-f034-4e9a-8512-e29da9f93cad" />
+
 
 ## 3. Playbook Execution
 
@@ -157,28 +106,19 @@ ansible-playbook site.yml \
   -e "operation=create" \
   -e "eks_cluster_name=my-cluster"
 
+<img width="1101" height="570" alt="image" src="https://github.com/user-attachments/assets/812aa9b6-4742-4fb6-af3f-9c4670d6c5d7" />
+
+
+<img width="1362" height="584" alt="image" src="https://github.com/user-attachments/assets/c4295622-1185-489d-9273-abbda6b1b796" />
+
+
+
 The supported operations are:
 
 create
 verify
 destroy
-Create
 
-Creates the EKS cluster using Ansible and eksctl.
-
-Jenkins
-   |
-   v
-Ansible
-   |
-   v
-eksctl
-   |
-   v
-AWS EKS
-Verify
-
-Verifies the EKS cluster status.
 
 Example:
 
@@ -186,141 +126,32 @@ aws eks describe-cluster \
   --name my-cluster \
   --region ap-south-1
 
-Kubernetes nodes can also be checked using:
+<img width="1313" height="600" alt="image" src="https://github.com/user-attachments/assets/c9f8cb98-3aac-49e6-92ae-390b3f01fcd6" />
 
-kubectl get nodes
+
 Destroy
 
 Deletes the EKS cluster using:
 
 eksctl delete cluster
 
+<img width="1361" height="423" alt="image" src="https://github.com/user-attachments/assets/9e905791-bcc5-4755-95b7-a1ce6599e14f" />
+
+<img width="1365" height="559" alt="image" src="https://github.com/user-attachments/assets/cd245e21-3891-427f-9328-aa9c04804f92" />
+
+
 ## 4. Notification
 
-After playbook execution, Jenkins sends the build status to Slack.
+After playbook execution, Jenkins sends the build status to Slack and email.
 
-Slack channel:
+<img width="1030" height="406" alt="image" src="https://github.com/user-attachments/assets/2b558714-ad61-4a2a-9825-adf9a3c4deb6" />
 
-SLACK_CHANNEL_NAME: build-status
+<img width="1126" height="406" alt="image" src="https://github.com/user-attachments/assets/2ff23aa9-aec3-43e7-bfd9-84b9d8ae5714" />
 
-Example successful notification:
 
-EKS Automation
+<img width="1072" height="392" alt="image" src="https://github.com/user-attachments/assets/fdd09076-084e-451d-9cc6-bc8cb879f961" />
 
-Operation: CREATE
-Environment: learning
-Status: SUCCESS
 
-EKS automation completed successfully.
+# Conclusion
 
-Example failed notification:
-
-EKS Automation
-
-Operation: CREATE
-Environment: learning
-Status: FAILED
-Ansible Configuration
-
-AWS region:
-
-ap-south-1
-
-EKS configuration:
-
-Kubernetes Version: 1.35
-Instance Type: t3.small
-Minimum Nodes: 1
-Desired Nodes: 1
-Maximum Nodes: 2
-Volume Size: 20 GB
-Volume Type: gp3
-
-The configuration is intended for a learning environment.
-
-Jenkins AWS Credentials
-
-AWS credentials are stored in Jenkins Credentials and are injected during pipeline execution.
-
-Example credential IDs:
-
-aws-access-key
-aws-secret-key
-
-The AWS credentials are not stored directly in the Git repository.
-
-They are used by the Shared Library during Ansible execution.
-
-Jenkinsfile
-
-Example Jenkinsfile:
-
-@Library('devops-shared-library') _
-
-pipeline {
-
-    agent any
-
-    stages {
-
-        stage('EKS Automation') {
-
-            steps {
-
-                eksAutomation()
-            }
-        }
-    }
-}
-
-The Shared Library handles the complete workflow.
-
-EKS Operations
-
-The Shared Library supports three operations:
-
-Operation	Purpose
-create	Create EKS cluster
-verify	Verify EKS cluster
-destroy	Delete EKS cluster
-Complete Workflow
-                Jenkins
-                   |
-                   v
-          Jenkins Shared Library
-                   |
-                   v
-            Read Configuration
-                   |
-                   v
-                Clone
-                   |
-                   v
-            User Approval
-                   |
-                   v
-         Ansible Playbook
-                   |
-          +--------+--------+
-          |        |        |
-          v        v        v
-       CREATE   VERIFY   DESTROY
-          |        |        |
-          +--------+--------+
-                   |
-                   v
-                AWS EKS
-                   |
-                   v
-            Slack Notification
-Assignment Requirements
-
-The following Assignment 6 requirements are implemented:
-
-Clone
-User Approval
-Playbook Execution
-Notification
-Configuration through configuration file
-Jenkins Shared Library
-Ansible based Kubernetes/EKS automation
+This assignment successfully implemented an automated EKS cluster management pipeline using Jenkins and a shared library. It includes parameterized create, verify, and destroy operations, user approval, and automated Slack and email notifications on successful builds.
