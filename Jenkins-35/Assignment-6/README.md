@@ -26,7 +26,7 @@ EKS-Jenkins/
 
 ```
 The Ansible project is maintained separately:
-
+```
 eks-automation/
 ├── ansible.cfg
 ├── inventory
@@ -42,6 +42,7 @@ eks-automation/
         │   └── main.yml
         └── templates/
             └── eks-cluster.yaml.j2
+```
 
 ## Shared Library
 
