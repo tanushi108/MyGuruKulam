@@ -245,3 +245,10 @@ http://assignment-01-alb-195736164.ap-south-1.elb.amazonaws.com/Spring3Hibernate
 
 <img width="1365" height="420" alt="image" src="https://github.com/user-attachments/assets/d41174a0-cb77-4cdd-b41e-946e66bf2a0f" />
 
+
+# Conclusion
+This assignment demonstrates the deployment of a scalable and highly available web application architecture on AWS.
+
+The final infrastructure separates public and private resources, exposes the application through an internet-facing Application Load Balancer, keeps application EC2 instances in private subnets, provides outbound connectivity through a NAT Gateway, and uses Auto Scaling for availability and scalability.
+
+The application environment was tested independently before being packaged into a custom AMI and used through the Launch Template and Auto Scaling Group.
