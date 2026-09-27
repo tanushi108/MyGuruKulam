@@ -94,7 +94,7 @@ Instance Refresh
 New Version
 
 
-3. Blue-Green Deployment ⭐ Good To Do
+## 3. Blue-Green Deployment ⭐ Good To Do
 
 Create two separate environments:
 
@@ -111,7 +111,8 @@ Test the Green environment.
 Use a Load Balancer to direct traffic to the required environment.
 Store configuration files or environment-specific assets in S3.
 Switch traffic from Blue → Green after validation.
-4. A/B Deployment
+
+## 4. A/B Deployment
 
 A/B deployment sends different users or traffic segments to different application versions.
 
