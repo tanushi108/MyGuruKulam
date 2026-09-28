@@ -94,7 +94,7 @@ Instance Refresh
 New Version
 
 
-## 3. Blue-Green Deployment ⭐ Good To Do
+## 3. Blue-Green Deployment
 
 Create two separate environments:
 
@@ -104,13 +104,7 @@ Create two separate environments:
           |               |
        BLUE             GREEN
      Version 1         Version 2
-Implementation
-Create the Blue environment with the current application.
-Create the Green environment with the new application version.
-Test the Green environment.
-Use a Load Balancer to direct traffic to the required environment.
-Store configuration files or environment-specific assets in S3.
-Switch traffic from Blue → Green after validation.
+
 
 ## 4. A/B Deployment
 
@@ -128,7 +122,7 @@ Version B → 50% traffic
 
 Monitor application behavior and user interaction for both versions.
 
-5. Canary Deployment ⭐ Good To Do
+## 5. Canary Deployment 
 
 Deploy the new version to only a small portion of the infrastructure first.
 
@@ -138,62 +132,3 @@ Deploy the new version to only a small portion of the infrastructure first.
        |              |
     Version 1      Version 2
     90% traffic    10% traffic
-Implementation
-Keep most instances on the stable version.
-Deploy the new version to a small subset of instances.
-Monitor:
-CPU utilization
-Network traffic
-Application errors
-Response behavior
-Store logs/metrics or deployment information in S3.
-Gradually increase traffic if the new version performs as expected.
-🪣 Amazon S3 Usage
-
-S3 is used for:
-
-Static Assets
-images/
-css/
-js/
-Deployment Artifacts
-application-v1/
-application-v2/
-Configuration
-config/
-environment/
-Logs / Metrics
-logs/
-metrics/
-🛠 AWS Services Used
-Service	Purpose
-EC2	Application servers
-AMI	Application/server image
-Launch Template	Instance configuration
-Auto Scaling Group	Scaling and instance management
-ALB	Traffic distribution
-S3	Assets, artifacts, configuration and logs
-CloudWatch	Monitoring
-IAM	Access control
-📊 Deployment Strategy Comparison
-Strategy	Main Idea
-Recreate	Replace old environment with new one
-Rolling	Gradually replace old instances
-Blue-Green	Maintain two environments and switch traffic
-A/B	Send different traffic segments to different versions
-Canary	Release new version to a small subset first
-✅ Assignment Outcome
-
-By completing this assignment, we understand how to:
-
-Create and use AMIs.
-Deploy applications on EC2.
-Use S3 for static assets and deployment artifacts.
-Configure ASG for scalable deployments.
-Perform Rolling Deployments.
-Understand Blue-Green, A/B, and Canary deployment strategies.
-Use Load Balancers for traffic management.
-Monitor deployments using CloudWatch.
-
-AWS Region: ap-south-1 (Mumbai)
-Deployment focus: EC2 + ASG + ALB + S3
