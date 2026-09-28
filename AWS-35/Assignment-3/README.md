@@ -1,6 +1,6 @@
 # Assignment 3 — AWS Nginx High Availability, Auto Scaling, S3, IAM & CDN
 
-## 📌 Project Overview
+## Project Overview
 
 This assignment demonstrates how to design and implement a highly available and scalable **Nginx reverse-proxy and web-hosting infrastructure on AWS**.
 
@@ -119,6 +119,8 @@ Test:
 curl http://localhost
 ```
 
+<img width="1365" height="266" alt="image" src="https://github.com/user-attachments/assets/110986c7-7d88-4c5a-bfd2-874c298136e4" />
+
 ---
 
 # 2. Create AMI-1
@@ -140,8 +142,10 @@ AMI-1 represents the initial version of the Nginx server.
 Example naming:
 
 ```text
-nginx-version-1
+assignment-3-day1-nginx-v1
 ```
+
+<img width="1203" height="289" alt="image" src="https://github.com/user-attachments/assets/f8c56bf3-c41b-4af1-b66f-6df3a9648760" />
 
 ---
 
@@ -160,6 +164,8 @@ V1
 ```
 
 Validate that Nginx is working.
+
+<img width="804" height="347" alt="image" src="https://github.com/user-attachments/assets/54dda02d-1d87-4d26-8739-4522f3034ced" />
 
 ---
 
@@ -194,8 +200,10 @@ nginx-version-2
 This becomes:
 
 ```text
-AMI-2
+assignment-3-day1-nginx-v2
+
 ```
+<img width="1237" height="302" alt="image" src="https://github.com/user-attachments/assets/5fde7b95-b994-4081-b725-cace36c2d4e1" />
 
 ---
 
@@ -204,7 +212,7 @@ AMI-2
 Launch another EC2 instance from:
 
 ```text
-AMI-2
+assignment-3-day1-nginx-v2
 ```
 
 This instance represents:
@@ -221,6 +229,23 @@ AMI-2 → V2
 ```
 
 ---
+## version chain
+```
+Original EC2
+     |
+     └── AMI-1
+          |
+          └── V1
+               |
+               └── Changes
+                    |
+                    └── AMI-2
+                         |
+                         └── V2
+```
+<img width="1365" height="590" alt="image" src="https://github.com/user-attachments/assets/16f66c23-3efc-4f07-86c6-8b37bac213fb" />
+
+<img width="824" height="266" alt="image" src="https://github.com/user-attachments/assets/44075cee-1ef9-40ee-a73a-d3b264cd0135" />
 
 # 6. Launch Template
 
@@ -269,6 +294,7 @@ Verify:
 ```text
 Target Health = Healthy
 ```
+<img width="1227" height="622" alt="image" src="https://github.com/user-attachments/assets/7708bd33-54c6-432e-a0dc-2cd45c1a532a" />
 
 ---
 
@@ -298,6 +324,8 @@ ALB
 Nginx
 ```
 
+<img width="1221" height="609" alt="image" src="https://github.com/user-attachments/assets/c2692a1f-93d9-4642-a9dc-cc4b4fe45e4f" />
+
 ---
 
 # 9. Create Auto Scaling Group
@@ -307,7 +335,7 @@ Create an Auto Scaling Group using the Launch Template.
 Example:
 
 ```text
-Minimum Capacity = 1
+Minimum Capacity = 2
 Desired Capacity = 2
 Maximum Capacity = 4
 ```
@@ -327,201 +355,49 @@ Architecture:
               ASG
 ```
 
----
-
-# 10. Scaling Policies
-
-Test different Auto Scaling policies.
-
-The assignment requires testing:
-
-* Average CPU Utilization
-* Network Bytes In
-* Network Bytes Out
-* ALB Request Count Per Target
+<img width="1172" height="261" alt="image" src="https://github.com/user-attachments/assets/55b4e650-fa61-4a6a-8e58-cb5100ccee3f" />
 
 ---
+## verify verion from alb
 
-## Policy 1 — Average CPU Utilization
+<img width="1365" height="235" alt="image" src="https://github.com/user-attachments/assets/c0bfa70b-f1e0-4a7a-9fc0-ede872bbf2a7" />
 
-Configure Target Tracking Scaling based on:
 
-```text
-Average CPU Utilization
-```
+#  Launch Template Version 2
+A new version of the existing Launch Template was created using the Nginx Version 2 AMI.
 
-Example:
+Launch Template: a3-nginx-v1-lt
 
-```text
-Target = 50%
-```
+Version: 2
 
-When CPU increases beyond the target, ASG launches additional instances.
+AMI: a3-nginx-v2-ami
+
+The remaining launch configuration was kept consistent with Version 1.
+
+<img width="1229" height="503" alt="image" src="https://github.com/user-attachments/assets/0aa5312a-4cf1-4361-85fa-b583805234fd" />
 
 ---
 
-## Policy 2 — Network Bytes In
+# Rollback to version 1
 
-Use:
+To verify the rollback mechanism, the Auto Scaling Group was reverted to Launch Template Version 1.
 
-```text
-NetworkIn
-```
+Launch Template: a3-nginx-v1-lt
 
-as the scaling metric.
+Version: 1
 
-Generate network traffic and observe ASG behavior.
+Another Instance Refresh was started to replace the Version 2 instances with Version 1 instances.
 
----
+<img width="1322" height="557" alt="image" src="https://github.com/user-attachments/assets/d6b55854-d4c7-4927-aa55-13f6e5732681" />
 
-## Policy 3 — Network Bytes Out
+# Verify Rollback Through ALB
+After the rollback Instance Refresh completed, the ALB DNS name was accessed again.
 
-Use:
+The Nginx Version 1 webpage was successfully displayed.
 
-```text
-NetworkOut
-```
+This confirmed that the infrastructure could be rolled back from Version 2 to Version 1 using the previous Launch Template version.
 
-as the scaling metric.
-
-Generate outbound traffic and monitor:
-
-```text
-NetworkOut
-Desired Capacity
-InService Instances
-```
-
----
-
-## Policy 4 — ALB Request Count Per Target
-
-Use:
-
-```text
-ALB Request Count Per Target
-```
-
-as the scaling metric.
-
-Traffic flow:
-
-```text
-Client
-   |
-   v
- ALB
-   |
-   v
-Target Group
-   |
-   v
-Nginx
-```
-
-When requests increase, ASG can add instances according to the configured policy.
-
----
-
-# 11. Load Testing
-
-Generate load against the Nginx server/ALB.
-
-Example:
-
-```bash
-stress --cpu 2 --timeout 300
-```
-
-or use an appropriate HTTP load-testing tool against the ALB.
-
-Monitor:
-
-```text
-EC2 → CPUUtilization
-EC2 → NetworkIn
-EC2 → NetworkOut
-ALB → RequestCount
-ASG → DesiredCapacity
-ASG → InServiceInstances
-```
-
----
-
-# 📊 Analysis
-
-During testing record:
-
-| Metric                  | Observation  |
-| ----------------------- | ------------ |
-| Average CPU Utilization | Record value |
-| Network Bytes In        | Record value |
-| Network Bytes Out       | Record value |
-| ALB Request Count       | Record value |
-| Desired Capacity        | Record value |
-| Running Instances       | Record value |
-| Scaling Time            | Record value |
-
----
-
-# 🔄 Version Upgrade
-
-Suppose the application currently uses:
-
-```text
-V1
-```
-
-and the client requests:
-
-```text
-V2
-```
-
-The deployment strategy should use:
-
-```text
-V1 AMI
-   |
-   v
-V2 AMI
-   |
-   v
-New Launch Template Version
-   |
-   v
-ASG
-```
-
-The old version should remain available for rollback.
-
----
-
-# 🔙 Rollback
-
-If V2 is incompatible with the application:
-
-```text
-V2
- |
- X
- |
- v
-Rollback
- |
- v
-V1
-```
-
-Rollback procedure:
-
-1. Keep AMI-1 available.
-2. Change Launch Template to the V1 AMI/version.
-3. Update the ASG.
-4. Replace V2 instances gradually.
-5. Verify Target Group health.
-6. Verify application functionality.
-7. Confirm that traffic is served by V1.
+<img width="1365" height="256" alt="image" src="https://github.com/user-attachments/assets/d66e1e7d-07a4-4e89-8657-ba32d0553e72" />
 
 ---
 
