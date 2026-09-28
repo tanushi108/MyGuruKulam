@@ -65,7 +65,14 @@ Static Assets → Amazon S3
 
 ### Implementation
 
+Initial nginx v1 setup ec2 instance
+<img width="1365" height="498" alt="image" src="https://github.com/user-attachments/assets/a12abd9f-aaa8-45fa-a9c6-8584309f15a5" />
+
+
 Create a Launch Template for the application.
+
+<img width="1353" height="578" alt="image" src="https://github.com/user-attachments/assets/42ffb339-9652-44d4-b35e-594efe1b0490" />
+
 Create an Auto Scaling Group.
 
 <img width="1344" height="569" alt="image" src="https://github.com/user-attachments/assets/69794f2e-b1d9-4c25-816c-0a16aef8401a" />
@@ -74,15 +81,58 @@ Configure minimum and maximum instance counts.
 
 <img width="443" height="369" alt="image" src="https://github.com/user-attachments/assets/73314371-881c-4871-815a-d8d902345c8e" />
 
-Deploy the initial application version.
 
-Create a new Launch Template version containing the updated application.
+User Data
+The instance can automatically retrieve a release from S3 during boot.
 
+Example:
+```
+#!/bin/bash
+
+apt-get update -y
+apt-get install -y nginx awscli
+
+rm -rf /var/www/html/*
+
+aws s3 cp s3://assignment-2-rolling2026/v2/index.html /var/www/html/index.html
+
+systemctl enable nginx
+systemctl restart nginx
+
+```
+
+User Data Flow
+```
+EC2 Launch
+    │
+    ▼
+User Data executes
+    │
+    ▼
+Download release from S3
+    │
+    ▼
+Copy files to /var/www/html
+    │
+    ▼
+Restart NGINX
+    │
+    ▼
+Application Ready
+
+```
 Update the ASG to use the new version.
+
+<img width="1233" height="556" alt="image" src="https://github.com/user-attachments/assets/f4eb2f83-1326-41e6-b071-9b2f45c7876d" />
+
 
 Perform an Instance Refresh to gradually replace old instances.
 
-Store deployment artifacts in Amazon S3.
+Store the file in Amazon S3.
+
+<img width="1357" height="405" alt="image" src="https://github.com/user-attachments/assets/b9107c00-a84a-4505-ba54-89e7380345ef" />
+
+<img width="1365" height="536" alt="image" src="https://github.com/user-attachments/assets/d5de1923-c3b7-471f-9510-271874dea4e5" />
 
 Flow
 ```
@@ -98,6 +148,8 @@ Instance Refresh
    ↓
 New Version
 ```
+
+<img width="1194" height="313" alt="image" src="https://github.com/user-attachments/assets/879c3944-d188-4e5b-8561-31b803df0f1f" />
 
 ## 3. Blue-Green Deployment
 
@@ -137,3 +189,16 @@ Deploy the new version to only a small portion of the infrastructure first.
        |              |
     Version 1      Version 2
     90% traffic    10% traffic
+
+
+
+
+
+# Conclusion
+This assignment demonstrates how AWS services can be combined to implement different deployment strategies.
+
+The Recreate deployment demonstrated an EC2-based deployment and AMI-based recreation of a working environment.
+
+The Rolling deployment demonstrated the use of S3 release artifacts, IAM permissions, Launch Templates, Auto Scaling Groups and Instance Refresh to gradually replace application instances.
+
+The same release structure can be extended to Blue-Green, Canary and A/B deployment strategies.
