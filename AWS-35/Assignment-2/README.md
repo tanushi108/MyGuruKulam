@@ -77,10 +77,15 @@ Configure minimum and maximum instance counts.
 Deploy the initial application version.
 
 Create a new Launch Template version containing the updated application.
+
 Update the ASG to use the new version.
+
 Perform an Instance Refresh to gradually replace old instances.
+
 Store deployment artifacts in Amazon S3.
+
 Flow
+```
 Old Version
    ↓
 ASG
@@ -92,7 +97,7 @@ New Launch Template Version
 Instance Refresh
    ↓
 New Version
-
+```
 
 ## 3. Blue-Green Deployment
 
