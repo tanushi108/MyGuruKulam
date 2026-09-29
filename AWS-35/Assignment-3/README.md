@@ -25,55 +25,9 @@ The infrastructure is implemented progressively from **Day 1 to Day 6**, startin
 * IAM trust relationships
 * Least-privilege IAM access
 
-> **Important:** All tasks are first performed manually through the AWS Console/EC2 environment as required by the client. Automation is considered only after the manual implementation is successfully validated.
-
 ---
 
-# 🏗️ Overall Architecture
-
-```text
-                         Internet
-                            |
-                            |
-                     Public IP Only
-                            |
-                            v
-                    +----------------+
-                    |      ALB       |
-                    | Port 80        |
-                    | Path Routing   |
-                    +-------+--------+
-                            |
-             +--------------+--------------+
-             |                             |
-        /ninja1                        /ninja2
-             |                             |
-             v                             v
-     +---------------+             +---------------+
-     | Private EC2-1 |             | Private EC2-2 |
-     | Nginx         |             | Nginx         |
-     | Image-1       |             | Image-2       |
-     +---------------+             +---------------+
-             |                             |
-             +-------------+---------------+
-                           |
-                           v
-                       S3 Bucket
-                    +-------------+
-                    | prod/       |
-                    | nonprod/     |
-                    +-------------+
-                           |
-                           v
-                       CloudFront
-                           |
-                           v
-                        Clients
-```
-
----
-
-# 📅 Day 1 — Nginx, AMI Versioning, ASG and High Availability
+#  Day 1 — Nginx, AMI Versioning, ASG and High Availability
 
 ## Objective
 
@@ -418,18 +372,38 @@ Clone the webpage repository from the VCS repository.
 Example:
 
 ```bash
-git clone <repository-url>
+git clone [<repository-url>](https://github.com/tanushi108/assignment-3-AWS-day2)
 ```
 
-Move into the project:
 
-```bash
-cd <repository-directory>
-```
+---
+# 2 Install AWS CLI, Nginx and Git
+Installed AWS CLI:
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
+sudo apt install unzip -y
+
+unzip awscliv2.zip
+
+sudo ./aws/install
+
+** Installed Nginx and Git: **
+
+sudo apt clean
+sudo rm -rf /var/lib/apt/lists/*
+
+sudo apt update
+
+sudo apt install nginx git -y
+
+<img width="886" height="306" alt="image" src="https://github.com/user-attachments/assets/fe45bc63-3766-453e-8173-cd22390d96ac" />
+
 
 ---
 
-# 2. Upload Images to S3 Using AWS CLI
+
+# 3. Upload Images to S3 Using AWS CLI
 
 The client specifically does not want hard-coded AWS access keys.
 
@@ -449,30 +423,25 @@ Then verify:
 aws sts get-caller-identity
 ```
 
-Upload images:
+git clone and Upload images:
 
 ```bash
-aws s3 cp image1.jpg s3://<bucket-name>/images/
+git clone https://github.com/tanushi108/assignment-3-AWS-day2.git
+aws s3 cp aws (2).jpg s3://assignment-3-nginx-assets-2026 /images/
 ```
 
-Upload complete directory:
+<img width="462" height="225" alt="image" src="https://github.com/user-attachments/assets/b462fbdb-b72b-4009-b398-ac01ef0ab180" />
 
-```bash
-aws s3 cp ./images s3://<bucket-name>/images/ --recursive
-```
 
-No:
 
-```text
-AWS Access Key
-AWS Secret Access Key
-```
+<img width="1176" height="587" alt="image" src="https://github.com/user-attachments/assets/4b45cc15-eea5-4616-ae87-4444b2f0a918" />
 
-is stored on the server.
+<img width="605" height="110" alt="image" src="https://github.com/user-attachments/assets/c5cd5121-81f4-40ed-981d-a87c5a419128" />
+
 
 ---
 
-# 3. Nginx Frontend
+# 4. Nginx Frontend
 
 Create the webpage inside:
 
@@ -480,21 +449,12 @@ Create the webpage inside:
 /var/www/html/
 ```
 
-Example structure:
 
-```text
-/var/www/html/
-├── index.html
-├── css/
-├── js/
-└── images/
-```
+<img width="487" height="276" alt="image" src="https://github.com/user-attachments/assets/d0c7e659-0393-4e3c-aa93-eb7cadd1aaa2" />
 
-Images can be referenced from S3:
+<img width="1365" height="411" alt="image" src="https://github.com/user-attachments/assets/58f8321b-e932-4961-88e7-9d5b684f9c26" />
 
-```html
-<img src="https://<bucket-or-cloudfront-url>/images/image1.jpg">
-```
+<img width="1257" height="683" alt="image" src="https://github.com/user-attachments/assets/42ff8b64-3828-4e47-81e1-4642ec9efee0" />
 
 ---
 
@@ -1271,305 +1231,3 @@ Follow:
 Least Privilege
 ```
 
----
-
-# 🔐 Security Requirements
-
-The final architecture should follow these security principles.
-
-## EC2
-
-* Private Nginx servers
-* No unnecessary public IPs
-* SSH only through Bastion
-* Security Group references instead of broad CIDR rules where possible
-
-## Bastion
-
-```text
-SSH 22
-Source = YOUR_PUBLIC_IP/32
-```
-
-## ALB
-
-```text
-HTTP 80
-Source = YOUR_PUBLIC_IP/32
-```
-
-## Nginx
-
-```text
-HTTP 80
-Source = ALB Security Group
-
-SSH 22
-Source = Bastion Security Group
-```
-
-## S3
-
-* Block unnecessary public access
-* Use IAM policies
-* Use bucket policies carefully
-* Separate prod and nonprod
-* Restrict IAM user access
-* Use IAM Roles instead of access keys on EC2
-
-## IAM
-
-Follow:
-
-```text
-Least Privilege
-```
-
----
-
-# 🧪 Validation Checklist
-
-## Day 1
-
-* [ ] Nginx installed
-* [ ] AMI-1 created
-* [ ] V1 created
-* [ ] AMI-2 created
-* [ ] V2 created
-* [ ] Launch Template created
-* [ ] Target Group created
-* [ ] ALB created
-* [ ] ASG created
-* [ ] Scaling policy tested
-* [ ] Load test performed
-* [ ] CPU metrics analyzed
-* [ ] Network In analyzed
-* [ ] Network Out analyzed
-* [ ] ALB Request Count analyzed
-* [ ] V1 → V2 upgrade tested
-* [ ] V2 → V1 rollback tested
-
-## Day 2
-
-* [ ] Git repository cloned from EC2
-* [ ] IAM Role attached to EC2
-* [ ] AWS CLI verified
-* [ ] No access keys stored
-* [ ] Images uploaded to S3
-* [ ] Nginx webpage created
-* [ ] S3 images displayed
-
-## Day 3
-
-* [ ] Nginx health test performed
-* [ ] Instance made unhealthy
-* [ ] ASG detected unhealthy state
-* [ ] Replacement instance launched
-* [ ] Desired capacity maintained
-
-## Day 4
-
-* [ ] Bastion created
-* [ ] Private Nginx EC2-1 created
-* [ ] Private Nginx EC2-2 created
-* [ ] SSH restricted
-* [ ] HTTP restricted
-* [ ] Target Group 1 created
-* [ ] Target Group 2 created
-* [ ] ALB created
-* [ ] `/ninja1` tested
-* [ ] `/ninja2` tested
-* [ ] Image-1 displayed
-* [ ] Image-2 displayed
-* [ ] Images uploaded to S3
-
-## Day 5
-
-* [ ] S3 bucket created in us-east-1
-* [ ] prod folder created
-* [ ] nonprod folder created
-* [ ] Images uploaded
-* [ ] IAM user created
-* [ ] IAM Role created
-* [ ] IAM user restricted from prod
-* [ ] IAM user allowed to access nonprod
-* [ ] Bucket policy tested
-
-## Day 6
-
-* [ ] CloudFront distribution created
-* [ ] S3 configured as origin
-* [ ] CDN image access tested
-* [ ] IAM trust relationship validated
-* [ ] IAM permissions validated
-* [ ] Least-privilege IAM user created
-* [ ] Direct S3 access restrictions tested
-
----
-
-# 📈 Expected Final Architecture
-
-```text
-                         CLIENT
-                            |
-                            v
-                     Public IP Only
-                            |
-                            v
-                  +-------------------+
-                  |       ALB         |
-                  |    Port 80        |
-                  +---------+---------+
-                            |
-             +--------------+--------------+
-             |                             |
-          /ninja1                       /ninja2
-             |                             |
-             v                             v
-     +---------------+             +---------------+
-     | Private Nginx |             | Private Nginx |
-     |     EC2-1     |             |     EC2-2     |
-     |    Image-1    |             |    Image-2    |
-     +-------+-------+             +-------+-------+
-             |                             |
-             +-------------+---------------+
-                           |
-                           v
-                    +-------------+
-                    |     S3      |
-                    |-------------|
-                    | prod/       |
-                    | nonprod/    |
-                    +------+------+
-                           |
-                           v
-                    +-------------+
-                    | CloudFront  |
-                    |    CDN      |
-                    +-------------+
-                           |
-                           v
-                        CLIENT
-```
-
----
-
-# 🎯 Final Outcome
-
-After completing this assignment, the infrastructure will demonstrate:
-
-```text
-                    HIGH AVAILABILITY
-                           |
-                           v
-                         ALB
-                           |
-                           v
-                         ASG
-                           |
-             +-------------+-------------+
-             |                           |
-          Nginx                       Nginx
-             |                           |
-             +-------------+-------------+
-                           |
-                      Auto Scaling
-                           |
-                      Health Checks
-                           |
-                      AMI Versioning
-                           |
-                   Rolling Deployment
-                           |
-                        Rollback
-```
-
-and:
-
-```text
-                  WEB HOSTING
-                       |
-                       v
-                     Nginx
-                       |
-                       v
-                      S3
-                       |
-                       v
-                   CloudFront
-                       |
-                       v
-                     Client
-```
-
-while maintaining:
-
-```text
-IAM
- |
- +-- Least Privilege
- |
- +-- IAM Roles
- |
- +-- Trust Relationships
- |
- +-- S3 Restrictions
- |
- +-- Private EC2
- |
- +-- Bastion Access
- |
- +-- ALB Access Restrictions
-```
-
----
-
-# 📝 Key AWS Services Used
-
-| AWS Service        | Purpose                           |
-| ------------------ | --------------------------------- |
-| EC2                | Nginx servers                     |
-| AMI                | Versioned server images           |
-| Launch Template    | Instance configuration/versioning |
-| Auto Scaling Group | High availability and scaling     |
-| ALB                | Load balancing and path routing   |
-| Target Groups      | Nginx backend registration        |
-| CloudWatch         | Monitoring and scaling metrics    |
-| S3                 | Image/static-object storage       |
-| IAM                | Authentication and authorization  |
-| IAM Role           | Secure AWS access from EC2        |
-| CloudFront         | CDN and caching                   |
-| VPC                | Network isolation                 |
-| Security Groups    | Network access control            |
-| Bastion Host       | Controlled SSH access             |
-| AWS CLI            | S3 operations from EC2            |
-
----
-
-# 💡 Important Implementation Principle
-
-The assignment follows this sequence:
-
-```text
-MANUAL IMPLEMENTATION
-        ↓
-VALIDATION
-        ↓
-VERSIONING
-        ↓
-HIGH AVAILABILITY
-        ↓
-AUTO SCALING
-        ↓
-ROLLING DEPLOYMENT
-        ↓
-ROLLBACK
-        ↓
-SECURITY
-        ↓
-CDN
-        ↓
-AUTOMATION (OPTIONAL)
-```
-
-The manual implementation should be completed and tested first. Automation/Blue-Green deployment can then be added as an advanced enhancement.
