@@ -152,8 +152,8 @@ terraform/
 ### 1. Clone the Repository
 
 ```bash
-git clone 
-cd 
+git clone https://github.com/tanushi108/Assignment-4-Tool-Infra-Terraform
+cd Assignment-4-Tool-Infra-Terraform
 ```
 
 ### 2. Initialize Terraform
