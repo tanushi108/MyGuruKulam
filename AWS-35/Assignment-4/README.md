@@ -247,23 +247,3 @@ kubectl cluster-info
 
 <img width="1024" height="286" alt="image" src="https://github.com/user-attachments/assets/90614ec3-569f-4ef7-bb8c-322008790c65" />
 
----
-## Final Architecture Summary
-
-| Component              | Configuration |
-| ---------------------- | ------------- |
-| AWS Region             | ap-south-1    |
-| Availability Zones     | 2             |
-| VPC CIDR               | 10.0.0.0/16   |
-| Public Subnets         | 2             |
-| Private Subnets        | 2             |
-| NAT Gateways           | 1             |
-| Elastic IPs            | 1             |
-| EKS Cluster            | 1             |
-| EKS Managed Node Group | 1             |
-| Node Instance Type     | t3.small      |
-| Desired Nodes          | 2             |
-| Minimum Nodes          | 1             |
-| Maximum Nodes          | 3             |
-| Separate EC2 ASG       | Not created   |
-| Terraform State        | S3 backend    |
