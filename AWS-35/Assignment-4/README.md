@@ -130,6 +130,8 @@ Using two Availability Zones satisfies the EKS networking requirement for the cl
 <img width="1146" height="530" alt="image" src="https://github.com/user-attachments/assets/8fbe85f2-0785-46b7-a091-2b160e4ee74d" />
 
 
+<img width="1164" height="417" alt="image" src="https://github.com/user-attachments/assets/c7f1efef-bbd9-498a-ab40-e94e3bf6e203" />
+
 ---
 
 ## Terraform Project Structure
