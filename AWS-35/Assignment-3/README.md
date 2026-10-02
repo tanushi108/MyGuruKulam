@@ -355,7 +355,7 @@ This confirmed that the infrastructure could be rolled back from Version 2 to Ve
 
 ---
 
-# 📅 Day 2 — Nginx Web Hosting + S3
+#  Day 2 — Nginx Web Hosting + S3
 
 ## Objective
 
@@ -617,7 +617,7 @@ Application images are served from Amazon S3.
 Created:
 
 ```text
-a3-nginx-ninja2-tg
+day-4-nginx-tg
 ```
 
 Configuration:
@@ -626,13 +626,14 @@ Configuration:
 Target Type: Instance
 Protocol: HTTP
 Port: 80
-VPC: aws-a3-vpc
+VPC: assignment-3-vpc
 Health Check Path: /
 ```
 
 ### Screenshot
 
-![Ninja 2 Target Group](screenshots/phase4-01-ninja2-target-group.png)
+<img width="1207" height="555" alt="image" src="https://github.com/user-attachments/assets/65db915b-44e6-4a2f-8797-c5e5a11a1cab" />
+
 
 ---
 
