@@ -458,7 +458,7 @@ Create the webpage inside:
 
 ---
 
-# 📅 Day 3 — Auto Scaling Health Check and Recovery
+# Day 3 — Auto Scaling Health Check and Recovery
 
 ## Objective
 
@@ -487,6 +487,8 @@ sudo systemctl status nginx
 ```
 
 The instance should fail the application/target health check depending on the configured health-check design.
+
+<img width="923" height="282" alt="image" src="https://github.com/user-attachments/assets/0083d6b6-857c-4beb-b3c3-a64cf09ad5eb" />
 
 ---
 
@@ -519,6 +521,15 @@ InService Instances
 Unhealthy Instances
 ```
 
+<img width="1203" height="560" alt="image" src="https://github.com/user-attachments/assets/883205ee-9104-4ad6-a254-d6acd99ef142" />
+
+
+<img width="1173" height="574" alt="image" src="https://github.com/user-attachments/assets/92f2873b-f657-45f9-8925-f99bcf7c1542" />
+
+<img width="1159" height="196" alt="image" src="https://github.com/user-attachments/assets/3de9d488-1602-4d26-a3f3-2394e37b5dec" />
+
+<img width="1216" height="543" alt="image" src="https://github.com/user-attachments/assets/fa66a836-b55b-47a6-aa18-ec24a858a599" />
+
 ---
 
 # 4. Desired State
@@ -535,9 +546,11 @@ If one instance becomes unhealthy and is terminated/replaced according to the co
 Desired Capacity = 2
 ```
 
+<img width="1152" height="194" alt="image" src="https://github.com/user-attachments/assets/9bcc46ce-30ab-47d8-86c9-ec298b108e89" />
+
 ---
 
-# 🔄 Deployment Utility Requirement
+#  Deployment Utility Requirement
 
 The final solution should be designed so that a deployment utility can:
 
@@ -581,366 +594,287 @@ Update ASG
 Rolling Replacement
 ```
 
-### Rollback
+
+
+---
+# Day 4 — Path-Based Routing, Private EC2 & S3 Integration
+
+##  Objective
+
+Implement path-based routing using one Application Load Balancer with two Target Groups and two private Nginx application servers.
 
 ```text
-Current Version
-      |
-      v
-Previous AMI
-      |
-      v
-Previous Launch Template
-      |
-      v
-ASG
+/ninja1 → Target Group 1 → Ninja 1
+/ninja2 → Target Group 2 → Ninja 2
 ```
+
+Application images are served from Amazon S3.
 
 ---
 
-# 🔵🟢 Optional — Blue/Green Deployment
+## 1. Create Second Target Group
 
-An advanced implementation can use:
-
-```text
-             ALB
-              |
-       +------+------+
-       |             |
-    Blue TG       Green TG
-       |             |
-      V1             V2
-```
-
-Initially:
+Created:
 
 ```text
-ALB → Blue → V1
+a3-nginx-ninja2-tg
 ```
 
-After testing V2:
+Configuration:
 
 ```text
-ALB → Green → V2
+Target Type: Instance
+Protocol: HTTP
+Port: 80
+VPC: aws-a3-vpc
+Health Check Path: /
 ```
 
-If V2 fails:
+### Screenshot
 
-```text
-ALB → Blue → V1
-```
-
-This provides a fast rollback mechanism.
+![Ninja 2 Target Group](screenshots/phase4-01-ninja2-target-group.png)
 
 ---
 
-# 📅 Day 4 — ALB Path-Based Routing
+## 2. Launch Ninja 2 Private EC2
 
-## Objective
-
-Use a single ALB DNS name to expose two different Nginx applications.
-
-Example:
+Created:
 
 ```text
-ALB-DNS/ninja1
-ALB-DNS/ninja2
+Name: day4-ec2-v2
+AMI: assignment3-day1-nginx-v2
+Instance Type: t3.micro
+VPC: assignment3-vpc
+Subnet: assignment3-public
+Public IP: Disabled
+IAM Role: assignment-3-ec2-role
 ```
+
+Private IP:
+
+```text
+10.0.0.147
+```
+
+Availability Zone:
+
+```text
+ap-south-1b
+```
+
+The instance was accessed through the Bastion Host.
+
+<img width="1185" height="470" alt="image" src="https://github.com/user-attachments/assets/2e13b1cf-2bfa-453b-b9d7-950b739f86a4" />
 
 ---
 
-# 🏗️ Day 4 Architecture
+## 3. Configure Security Group
+
+The Ninja 2 instance uses:
 
 ```text
-                         Internet
-                            |
-                      Public IP Only
-                            |
-                            v
-                         ALB
-                       Port 80
-                            |
-              +-------------+-------------+
-              |                           |
-        /ninja1                       /ninja2
-              |                           |
-              v                           v
-       Target Group 1              Target Group 2
-              |                           |
-              v                           v
-       Private EC2-1               Private EC2-2
-           Nginx                       Nginx
-         Image-1                      Image-2
+assignment-3-day4-sg
 ```
+
+Expected rules:
+
+```text
+SSH 22  → Bastion Security Group
+HTTP 80 → ALB Security Group
+Outbound → All Traffic
+```
+
+The application server has no public IP.
 
 ---
 
-# 1. Network Design
+## 4. Configure Ninja 2 Nginx Page
 
-Create/use:
+Configured a separate Ninja 2 page containing:
 
 ```text
-Public Subnet
-    |
-    +-- Bastion Host
-
-Private Subnet 1
-    |
-    +-- Nginx EC2-1
-
-Private Subnet 2
-    |
-    +-- Nginx EC2-2
+AWS Assignment 3
+Nginx - Ninja 2
+Phase 4 - Path Based Routing
+Server: NINJA 2
+Private Subnet: 10.0.12.0/24
 ```
+
+The page also loads an image directly from Amazon S3.
 
 ---
 
-# 2. Bastion Host
+## 5. Register Ninja 2 Target
 
-The Bastion Host is placed in the public subnet.
-
-SSH:
+Registered:
 
 ```text
-Internet
-   |
-   v
-Public IP
-   |
-   v
-Bastion
-   |
-   v
-Private EC2
+day4-ec2-v2
 ```
 
-Bastion Security Group:
+with:
 
 ```text
-SSH : 22
-Source: YOUR_PUBLIC_IP/32
+
+day4-v2-nginx-tg
 ```
 
-No public SSH access should be allowed from:
+Port:
 
 ```text
-0.0.0.0/0
+80
 ```
+
+After attaching the Target Group to the ALB, the target became:
+
+```text
+Healthy ✅
+```
+
+### Screenshot
+
+<img width="1200" height="536" alt="image" src="https://github.com/user-attachments/assets/06e91110-6ad2-44c6-af71-cb5bcf48b830" />
+
 
 ---
 
-# 3. Private Nginx Servers
+## 6. Configure ALB Path-Based Routing
 
-Both Nginx instances remain private.
-
-Their SSH access:
+Existing ALB:
 
 ```text
-Port 22
-Source = Bastion Security Group
+day4-alb
 ```
 
-Therefore:
+HTTP listener:
 
 ```text
-Internet
-   X
-   |
-Private Nginx
+HTTP :80
 ```
 
-but:
+### Rule 1
 
 ```text
-Bastion
-   |
-   v
-Private Nginx
+Priority: 1
+IF Path = /ninja1*
+THEN Forward to a3-nginx-tg
 ```
 
-is allowed.
+### Rule 2
+
+```text
+Priority: 2
+IF Path = /ninja2*
+THEN Forward to a3-nginx-ninja2-tg
+```
+
 
 ---
 
-# 4. Nginx Application 1
+## 7. Configure ALB URL Rewrite
 
-First Nginx server should display:
+Initially, `/ninja1` returned `404 Not Found` because Nginx had `index.html` at `/`.
+
+ALB URL rewrite was therefore configured.
+
+### Ninja 1
+
+```text
+Regex:
+^/ninja1/?(.*)$
+
+Replacement:
+/$1
+```
+
+### Ninja 2
+
+```text
+Regex:
+^/ninja2/?(.*)$
+
+Replacement:
+/$1
+```
+
+This converts:
+
+```text
+/ninja1 → /
+/ninja2 → /
+```
+
+before forwarding the request to Nginx.
+
+<img width="1181" height="537" alt="image" src="https://github.com/user-attachments/assets/1d2b3a7f-6635-4dde-9173-0a554affc470" />
+
+---
+
+## 8. Verify Ninja 1
+
+URL:
+
+```text
+http://day-4-alb-888376673.ap-south-1.elb.amazonaws.com/ninja1
+```
+
+Routing:
 
 ```text
 /ninja1
+   ↓
+ALB
+   ↓
+a3-nginx-tg
+   ↓
+Private Nginx / Ninja 1
 ```
 
-and show:
+The Ninja 1 page was successfully displayed.
 
-```text
-Image-1
-```
+### Screenshot
 
-Example:
+<img width="1365" height="642" alt="image" src="https://github.com/user-attachments/assets/deb8eb54-f986-4b97-89c2-2bbfc17adabf" />
 
-```text
-http://server/ninja1
-```
 
 ---
 
-# 5. Nginx Application 2
+## 9. Verify Ninja 2
 
-Second Nginx server should display:
+URL:
+
+```text
+http://day-4-alb-888376673.ap-south-1.elb.amazonaws.com/ninja2
+```
+
+Routing:
 
 ```text
 /ninja2
+   ↓
+ALB
+   ↓
+a3-nginx-ninja2-tg
+   ↓
+Private Nginx / Ninja 2
 ```
 
-and show:
+The Ninja 2 page was successfully displayed.
 
-```text
-Image-2
-```
+The S3 image was also successfully loaded.
 
-Example:
+### Screenshot
 
-```text
-http://server/ninja2
-```
+<img width="1361" height="683" alt="image" src="https://github.com/user-attachments/assets/42eaa30c-4d5f-423c-a0a7-2556765fddf6" />
 
 ---
 
-# 6. Target Groups
+## 10. S3 Image Integration
 
-Create two Target Groups:
+The Ninja 2 webpage loads the image directly from Amazon S3.
 
-```text
-Target Group 1
-    |
-    +-- Nginx EC2-1
+<img width="1176" height="432" alt="image" src="https://github.com/user-attachments/assets/dd2ed25c-0951-466a-9a75-193f90bb2cc6" />
 
-Target Group 2
-    |
-    +-- Nginx EC2-2
-```
-
-Health check:
-
-```text
-Protocol: HTTP
-Port: 80
-```
-
----
-
-# 7. ALB Listener Rules
-
-Create HTTP listener on:
-
-```text
-Port 80
-```
-
-Rule 1:
-
-```text
-IF Path = /ninja1
-THEN Forward → Target Group 1
-```
-
-Rule 2:
-
-```text
-IF Path = /ninja2
-THEN Forward → Target Group 2
-```
-
-Traffic:
-
-```text
-ALB-DNS/ninja1
-       |
-       v
-Target Group 1
-       |
-       v
-Nginx-1
-       |
-       v
-Image-1
-```
-
-and:
-
-```text
-ALB-DNS/ninja2
-       |
-       v
-Target Group 2
-       |
-       v
-Nginx-2
-       |
-       v
-Image-2
-```
-
----
-
-# 8. Security Groups
-
-## ALB Security Group
-
-Allow:
-
-```text
-HTTP : 80
-Source: YOUR_PUBLIC_IP/32
-```
-
-Do not expose ALB HTTP to:
-
-```text
-0.0.0.0/0
-```
-
-if the requirement is public-IP-only access.
-
----
-
-## Nginx Security Group
-
-Allow:
-
-```text
-HTTP : 80
-Source: ALB Security Group
-```
-
-Allow:
-
-```text
-SSH : 22
-Source: Bastion Security Group
-```
-
-Do not allow:
-
-```text
-HTTP → 0.0.0.0/0
-SSH  → 0.0.0.0/0
-```
-
----
-
-# 9. S3 Image Management
-
-Maintain the webpage repository on the EC2 server.
-
-Push updated images to the required S3 folders using AWS CLI.
-
-Example:
-
-```bash
-aws s3 cp image1.jpg s3://<bucket>/ninja1/
-aws s3 cp image2.jpg s3://<bucket>/ninja2/
-```
 
 ---
 
