@@ -879,7 +879,7 @@ The Ninja 2 webpage loads the image directly from Amazon S3.
 
 ---
 
-# 📅 Day 5 — S3, IAM and Environment Separation
+#  Day 5 — S3, IAM and Environment Separation
 
 ## Objective
 
@@ -892,12 +892,6 @@ nonprod
 
 folders.
 
-The S3 bucket should be created in:
-
-```text
-US East (N. Virginia)
-us-east-1
-```
 
 ---
 
@@ -906,8 +900,9 @@ us-east-1
 Example:
 
 ```text
-<unique-bucket-name>
+assignment-3-day-5-tanushi-2026
 ```
+in `us-east-1`region 
 
 Inside the bucket:
 
@@ -916,6 +911,9 @@ bucket/
 ├── prod/
 └── nonprod/
 ```
+<img width="911" height="467" alt="image" src="https://github.com/user-attachments/assets/94404cae-61c4-4b6c-80a9-ca7d76cb1169" />
+
+<img width="1362" height="402" alt="image" src="https://github.com/user-attachments/assets/f597c1ea-7cbb-4cf5-9b2e-915fc001469c" />
 
 ---
 
@@ -929,9 +927,14 @@ prod/
    └── prod-image2.jpg
 
 nonprod/
-   ├── test-image1.jpg
-   └── test-image2.jpg
+   ├── nonprod-image1.jpg
+   └── nonprd-image2.jpg
 ```
+
+<img width="1363" height="365" alt="image" src="https://github.com/user-attachments/assets/1aaf56dd-82ad-4b04-93b2-f18d79ce662c" />
+
+
+<img width="1365" height="330" alt="image" src="https://github.com/user-attachments/assets/df45f624-92c6-4e5e-9fa0-108942be57e6" />
 
 ---
 
@@ -971,6 +974,9 @@ depending on the exact task.
 
 Attach the role to the EC2 instance instead of storing access keys.
 
+
+<img width="1151" height="266" alt="image" src="https://github.com/user-attachments/assets/e9aff515-195b-4769-b9e3-c1c8e98dee81" />
+
 ---
 
 # 5. IAM User Restriction
@@ -999,6 +1005,8 @@ arn:aws:s3:::BUCKET/prod/*
 
 The final policy should be tested using the IAM Policy Simulator and actual CLI/API calls.
 
+<img width="1256" height="519" alt="image" src="https://github.com/user-attachments/assets/c481a75f-e938-4da4-bf15-ec14b1e7df35" />
+
 ---
 
 # 6. Bucket Access
@@ -1016,9 +1024,14 @@ CloudFront/CDN service
 
 Do not make the entire bucket public unless explicitly required.
 
+
+<img width="1365" height="310" alt="image" src="https://github.com/user-attachments/assets/d55198d0-3547-4d16-b95b-68a448d9d57d" />
+
+<img width="394" height="72" alt="image" src="https://github.com/user-attachments/assets/233bc8cb-57bf-4e72-ae65-da6fecbab2a5" />
+
 ---
 
-# 📅 Day 6 — CloudFront, IAM Trust Relationship and Least Privilege
+#  Day 6 — CloudFront, IAM Trust Relationship and Least Privilege
 
 ## Objective
 
