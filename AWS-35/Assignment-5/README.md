@@ -216,7 +216,10 @@ Verify the created AWS resources in the AWS Console or with the AWS CLI. Confirm
 
 ---
 
-## 8. State Locking Verification 
+## 8. State Locking Verification
+
+<img width="923" height="180" alt="image" src="https://github.com/user-attachments/assets/6d5f1982-6519-4e88-81b6-ea8f73e8e01e" />
+
 
 
 ---
@@ -252,4 +255,4 @@ Reusable Terraform modules were organized for the key AWS infrastructure compone
 <img width="954" height="323" alt="image" src="https://github.com/user-attachments/assets/79690ea9-cbc3-446b-97b8-fc691b14b3eb" />
 
 
-<img width="923" height="180" alt="image" src="https://github.com/user-attachments/assets/6d5f1982-6519-4e88-81b6-ea8f73e8e01e" />
+
