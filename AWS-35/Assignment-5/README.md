@@ -68,98 +68,7 @@ aws sts get-caller-identity
 
 ---
 
-## 1. Configure AWS Provider
-
-The root configuration declares the AWS provider and region. Keep provider configuration in the root module and pass provider context to child modules as needed.
-
-Example:
-
-```hcl
-terraform {
-  required_version = ">= 1.5.0"
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-```
-
----
-
-## 2. Create Reusable Terraform Modules
-
-Each module should have a focused responsibility and expose configurable inputs through `variables.tf`. Use `outputs.tf` to return values required by other modules.
-
-### VPC Module
-Creates the VPC and exports its ID.
-
-### Subnets Module
-Creates public and/or private subnets using the VPC ID and subnet CIDR blocks supplied by the root module.
-
-### Security Group Module
-Defines inbound and outbound rules. Restrict inbound access to only the ports and source ranges required for the assignment.
-
-### EC2 Instance Module
-Creates an EC2 instance using inputs such as AMI ID, instance type, subnet ID, security group IDs, and tags.
-
-**Screenshot 1 – Terraform modules directory**
-
-![Modules Directory](screenshots/01-modules.png)
-
----
-
-## 3. Call Modules from the Root Configuration
-
-The root module wires the components together by passing outputs from one module into the inputs of another.
-
-
-Update module input/output names to match your implementation.
-
-**Screenshot 2 – Root module calling child modules**
-
-![Root Module](screenshots/02-root-module.png)
-
----
-
-## 4. Configure Remote Terraform State in S3
-
-Terraform state records the resources managed by Terraform. A remote backend stores the state outside the local working directory, allowing authorized team members and automation to use a shared state location.
-
-Before initialization, create the S3 bucket and DynamoDB table. Recommended S3 settings:
-- Enable bucket versioning to help recover earlier state versions.
-- Block public access.
-- Enable server-side encryption.
-- Apply least-privilege access to the bucket.
-- Use a unique bucket name.
-
-Example backend configuration (place in a Terraform configuration file):
-
-
-Replace the placeholders with your actual S3 bucket and DynamoDB table names. The region must match the location of the S3 bucket.
-
----
-
-## 5. Configure DynamoDB State Locking
-
-Create a DynamoDB table for Terraform locking with:
-- Partition key: `LockID`
-- Key type: `String`
-- Billing mode: On-demand is suitable for a small assignment.
-
-Terraform uses the configured table to coordinate state operations and reduce the risk of simultaneous changes to the same state.
-
-> Note: This assignment uses DynamoDB locking as requested. Check the documentation for your installed Terraform version for current backend recommendations; newer Terraform versions also support S3-native lock files.
-
----
-
-## 6. Initialize and Validate Terraform
+## Initialize and Validate Terraform
 
 Run these commands from the root directory:
 
@@ -170,7 +79,6 @@ terraform validate
 terraform plan
 ```
 
-If Terraform asks whether to copy existing local state to the S3 backend, review the prompt carefully and confirm only when the destination backend is correct.
 
 **Terraform init and validation**
 
@@ -184,17 +92,13 @@ If Terraform asks whether to copy existing local state to the S3 backend, review
 
 ---
 
-## 7. Deploy and Verify Infrastructure
+##  Deploy and Verify Infrastructure
 
 Apply the planned configuration:
 
 ```bash
 terraform apply
 ```
-
-Review the proposed changes and type `yes` when ready.
-
-Verify the created AWS resources in the AWS Console or with the AWS CLI. Confirm that the EC2 instance is associated with the expected subnet and security group, and that the VPC/subnets match the intended design.
 
 **Terraform apply completed**
 
@@ -206,19 +110,21 @@ Verify the created AWS resources in the AWS Console or with the AWS CLI. Confirm
 
 <img width="593" height="298" alt="image" src="https://github.com/user-attachments/assets/0ee8f98b-8da7-4b73-9e3c-cbd7f89e3897" />
 
-**Screenshot 6 – AWS resources created**
+**AWS resources created**
 
-![AWS Resources](screenshots/06-aws-resources.png)
+<img width="1210" height="573" alt="image" src="https://github.com/user-attachments/assets/5377f964-7217-4ba3-97bf-a9c00e58c75f" />
 
-**Screenshot 7 – State object in S3**
 
-![S3 Terraform State](screenshots/07-s3-state.png)
+**State object in S3**
+<img width="1184" height="370" alt="image" src="https://github.com/user-attachments/assets/3c14195d-97a2-4c66-902f-6bd7341c6894" />
 
 ---
 
 ## 8. State Locking Verification
 
 <img width="923" height="180" alt="image" src="https://github.com/user-attachments/assets/6d5f1982-6519-4e88-81b6-ea8f73e8e01e" />
+
+<img width="703" height="404" alt="image" src="https://github.com/user-attachments/assets/d62b3a6a-1d8d-4a07-8e50-7714360f7313" />
 
 
 
@@ -228,31 +134,3 @@ Verify the created AWS resources in the AWS Console or with the AWS CLI. Confirm
 ## Conclusion
 
 Reusable Terraform modules were organized for the key AWS infrastructure components. The root configuration composes these modules, while the S3 backend stores Terraform state remotely and DynamoDB provides state locking. This structure improves maintainability, reuse, and safer collaboration.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<img width="685" height="352" alt="image" src="https://github.com/user-attachments/assets/40aa9e7b-b616-4e82-8708-c54d443194c5" />
-
-<img width="983" height="329" alt="image" src="https://github.com/user-attachments/assets/6deb9c06-cdd0-4d4c-8864-c48f64666b7e" />
-
-
-<img width="954" height="323" alt="image" src="https://github.com/user-attachments/assets/79690ea9-cbc3-446b-97b8-fc691b14b3eb" />
-
-
-
