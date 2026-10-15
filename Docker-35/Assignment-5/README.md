@@ -9,8 +9,6 @@
 
 <img width="779" height="236" alt="image" src="https://github.com/user-attachments/assets/02bec462-c603-4dd3-9388-6da25ec7c0b2" /> -->
 
-
----
 # Assignment 5: Deploy OT-Microservices on Kubernetes
 
 ## Objective
