@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: attendance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: attendance
+  template:
+    metadata:
+      labels:
+        app: attendance
+    spec:
+      containers:
+        - name: attendance
+          image: tanushirana875826/empms-attendance:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: mysql
