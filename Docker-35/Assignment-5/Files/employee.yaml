@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: employee
+  template:
+    metadata:
+      labels:
+        app: employee
+    spec:
+      containers:
+        - name: employee
+          image: tanushirana875826/empms-employee:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ELASTICSEARCH_HOST
+              value: "http://elasticsearch:9200"
