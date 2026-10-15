@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: salary
+  template:
+    metadata:
+      labels:
+        app: salary
+    spec:
+      containers:
+        - name: salary
+          image: tanushirana875826/empms-salary:latest
+          env:
+            - name: ELASTICSEARCH_HOST
+              value: "http://elasticsearch:9200"
