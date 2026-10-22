@@ -70,6 +70,11 @@ docker login
 docker tag ot-microservices-empms-attendance:latest tanushirana875826/empms-attendance:latest
 docker push tanushirana875826/empms-attendance:latest
 ```
+
+<img width="714" height="259" alt="image" src="https://github.com/user-attachments/assets/f37b0951-8158-4572-a0e3-c37f0e217115" />
+
+<img width="1365" height="511" alt="image" src="https://github.com/user-attachments/assets/216bf865-1352-4f5a-956f-dba9f0da2948" />
+
 <img width="1363" height="644" alt="image" src="https://github.com/user-attachments/assets/6a2cf5d1-f042-4795-8ffa-22a5b2fad8c4" />
 
 <img width="1123" height="157" alt="image" src="https://github.com/user-attachments/assets/5de37e47-fdff-42c2-81f3-b8a36a8ac4d7" />
