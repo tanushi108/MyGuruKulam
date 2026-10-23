@@ -3,25 +3,11 @@
 ## Objective
 Create a Docker image using the latest Ubuntu image, install Node.js and npm, configure an HTTP server, and serve a local HTML webpage inside a Docker container.
 
-## Prerequisites
-- Docker installed on the virtual machine.
-- Basic knowledge of Docker commands.
-- SSH or terminal access to the virtual machine.
-
-## Project Structure
-
-```text
-assignment2/
-├── Dockerfile
-├── index.html
-└── README.md
-```
 
 ## Step 1: Create the Dockerfile
 
 Create a file named `Dockerfile` and add the following instructions:
 
-**Note:** The symlink command is included as requested. If `/usr/bin/node` already exists in the selected Ubuntu image, the symlink command may fail. In that case, check `node --version` and adjust the command accordingly.
 
 ## Step 2: Create the HTML File
 
@@ -35,8 +21,7 @@ Create `index.html` in the same directory as the Dockerfile.
 </head>
 <body>
     <h1>Hello from Docker!</h1>
-    <p>This webpage is running inside an Ubuntu container.</p>
-    <p>Assignment 2 completed successfully.</p>
+    <h2>Assignment 2 - Tanushi</h2>
 </body>
 </html>
 ```
@@ -54,13 +39,14 @@ Verify that the image has been created:
 ```bash
 docker images
 ```
+<img width="1362" height="648" alt="image" src="https://github.com/user-attachments/assets/3cc4f5c8-6338-4f17-9cd3-98367cd1d4bf" />
 
 ## Step 4: Run the Docker Container
 
 Run the container and map host port 8080 to container port 8080.
 
 ```bash
-docker run -d --name hello-docker -p 8080:8080 tanushi:docker-web
+docker run -d --name hello-docker -p 8086:8080 tanushi:docker-web
 ```
 
 Verify the running container:
@@ -69,39 +55,26 @@ Verify the running container:
 docker ps
 ```
 
+<img width="1362" height="163" alt="image" src="https://github.com/user-attachments/assets/c4399c53-5beb-4114-b8fd-b9ac833f6a3f" />
+
 ## Step 5: Access the Webpage
 
 Open a browser and visit:
 
 ```text
-http://<virtualmachine_ipaddress>:8080/index.html
+http://172.31.129.36:8086/index.html
 ```
 
-Replace `<virtualmachine_ipaddress>` with the actual IP address of your virtual machine.
-
-To find the VM's IP address on Linux, run:
+<img width="1365" height="246" alt="image" src="https://github.com/user-attachments/assets/b62aedab-0eeb-440f-99d8-ce7381ff18fd" />
 
 ```bash
-hostname -I
+curl http://localhost:8086/index.html
 ```
 
-You can also test the webpage locally on the VM:
+<img width="799" height="235" alt="image" src="https://github.com/user-attachments/assets/a9bed59e-a48f-4a74-a061-269d47e52be6" />
 
-```bash
-curl http://localhost:8080/index.html
-```
 
-If you are accessing the VM remotely, ensure that inbound TCP port `8080` is allowed by the VM's firewall and, if applicable, its cloud security group.
-
-## Step 6: Check Container Logs
-
-View the container logs:
-
-```bash
-docker logs hello-docker
-```
-
-## Step 7: Delete the Docker Container and Image
+## Step 6: Delete the Docker Container and Image
 
 Stop the container:
 
@@ -115,18 +88,15 @@ Remove the container:
 docker rm hello-docker
 ```
 
+
 Remove the image:
 
 ```bash
 docker rmi tanushi:docker-web
 ```
 
-Verify the cleanup:
+<img width="777" height="255" alt="image" src="https://github.com/user-attachments/assets/bbd361e7-4260-48d8-aa24-6fd04a29a553" />
 
-```bash
-docker ps -a
-docker images
-```
 
 
 ## Conclusion
