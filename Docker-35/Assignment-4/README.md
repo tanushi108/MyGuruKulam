@@ -134,7 +134,7 @@ Do not share passwords, tokens, database credentials, or other secrets in a publ
 
 ### 2. Install Docker
 
-On the buddy's system, verify:
+On the system, verify:
 
 ```bash
 docker --version
@@ -167,84 +167,6 @@ docker compose ps
 
 Open the frontend using the published port.
 
-**Expected result:** The buddy runs the application using the shared Compose configuration and published images, without cloning the source repository.
-
-## Step 4: High Availability for Employee, Salary, and Attendance
-
-Docker Compose supports multiple replicas of stateless services. For this assignment, scale Employee, Salary, and Attendance to multiple containers.
-
-### 1. Configure the services
-
-Ensure the three services use published images and do not require unique host ports for every replica. For example:
-
-```yaml
-services:
-  empms-employee:
-    image: <dockerhub-username>/<employee-image>:<tag>
-    # Preserve the required environment, network and dependency settings.
-
-  empms-salary:
-    image: <dockerhub-username>/<salary-image>:<tag>
-    # Preserve the required environment, network and dependency settings.
-
-  empms-attendance:
-    image: <dockerhub-username>/<attendance-image>:<tag>
-    # Preserve the required environment, network and dependency settings.
-```
-
-Use the existing Compose configuration as the source of truth for all application-specific settings.
-
-### 2. Scale the services
-
-```bash
-docker compose up -d --scale empms-employee=2 --scale empms-salary=2 --scale empms-attendance=2
-```
-
-Verify the replicas:
-
-```bash
-docker compose ps
-```
-
-You should see multiple containers for each of the three services.
-
-### 3. Test replica recreation
-
-Inspect the running containers:
-
-```bash
-docker ps
-```
-
-Stop one Employee replica by its actual container name or ID:
-
-```bash
-docker stop <employee-container-name-or-id>
-```
-
-Then inspect the service again:
-
-```bash
-docker compose ps
-```
-
-Docker Compose does not automatically replace a manually stopped replica in every situation. To restore the desired replica count, run:
-
-```bash
-docker compose up -d --scale empms-employee=2
-```
-
-Repeat the test for Salary and Attendance.
-
-### High-availability considerations
-
-- Multiple replicas provide additional service instances.
-- Stateless services are easier to scale horizontally.
-- A load balancer or application-aware routing layer is needed to distribute requests between replicas.
-- Health checks help detect unhealthy containers but do not, by themselves, guarantee automatic recovery.
-- A single Docker host remains a single point of failure. Docker Compose on one host is not equivalent to multi-node orchestration with Docker Swarm or Kubernetes.
-
-**Expected result:** Employee, Salary, and Attendance can run multiple replicas and can be restored to their configured replica count.
 
 ## Bonus: Run Only Attendance and MySQL
 
